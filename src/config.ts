@@ -45,6 +45,7 @@ export const registeredTypes = {
     },
   },
   [ModularFieldType.Color]: regularInputType,
+  [ModularFieldType.Date]: regularInputType,
   [ModularFieldType.Email]: regularInputType,
   [ModularFieldType.File]: {
     ...regularInputType,
