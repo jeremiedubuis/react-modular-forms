@@ -9,7 +9,8 @@
   "types": "dist/declarations/index.d.ts",
   "scripts": {
     "build": "rollup --config rollup.config.js",
-    "watch": "rollup -c rollup.config.js -w"
+    "watch": "rollup -c rollup.config.js -w",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "react": "^17.0.2",
