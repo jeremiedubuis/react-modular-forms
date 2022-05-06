@@ -5,8 +5,10 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "declaration": true,
+    "declarationDir": "./dist/declarations"
   },
-  "include": ["./src", "./public"],
+  "include": ["./src"],
   "exclude": ["./dist"]
 }

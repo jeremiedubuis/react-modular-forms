@@ -6,6 +6,7 @@
   "files": [
     "dist/**/*"
   ],
+  "types": "dist/declarations/index.d.ts",
   "scripts": {
     "build": "rollup --config rollup.config.js",
     "watch": "rollup -c rollup.config.js -w"

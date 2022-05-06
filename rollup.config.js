@@ -14,7 +14,14 @@ const globals = {
   "react-dom": "ReactDOM",
 };
 
-const plugins = [resolve({ preferBuiltins: true }), commonjs(), typescript()];
+const plugins = [
+  resolve({ preferBuiltins: true }),
+  commonjs(),
+  typescript({
+    useTsconfigDeclarationDir: true,
+    tsconfig: dev ? "tsconfig.example.json" : "tsconfig.json",
+  }),
+];
 
 if (!dev) {
   plugins.unshift(peerDepsExternal());
