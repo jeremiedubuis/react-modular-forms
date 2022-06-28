@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { ModularFieldType, ModularForm, ModularFormField } from "../src";
-
 ReactDOM.render(
   <React.StrictMode>
     <ModularForm

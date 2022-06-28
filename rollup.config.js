@@ -6,6 +6,7 @@ import replace from "@rollup/plugin-replace";
 import resolve from "@rollup/plugin-node-resolve";
 import serve from "rollup-plugin-serve";
 import commonjs from "@rollup/plugin-commonjs";
+import path from "path";
 
 const dev = process.argv.indexOf("-w") > -1;
 
@@ -35,7 +36,12 @@ if (!dev) {
       preventAssignment: true,
     })
   );
-  plugins.push(serve(["dist", "public"]));
+  plugins.push(
+    serve([
+      path.join(process.cwd(), "dist"),
+      path.join(process.cwd(), "public"),
+    ])
+  );
 }
 
 const lib = {

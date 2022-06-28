@@ -36,6 +36,7 @@ export const registeredTypes = {
   [ModularFieldType.Checkbox]: {
     Component: RegularInput,
     labelBefore: false,
+    checkable: true,
     getValue: (ref: RefObject<any>) => {
       return ref.current.checked
         ? ref.current.value || true
@@ -58,7 +59,11 @@ export const registeredTypes = {
   [ModularFieldType.Hidden]: regularInputType,
   [ModularFieldType.Number]: regularInputType,
   [ModularFieldType.Password]: regularInputType,
-  [ModularFieldType.Radio]: { ...regularInputType, labelBefore: false },
+  [ModularFieldType.Radio]: {
+    ...regularInputType,
+    checkable: true,
+    labelBefore: false,
+  },
   [ModularFieldType.Select]: {
     ...regularInputType,
     Component: Select,

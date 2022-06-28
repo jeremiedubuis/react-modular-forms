@@ -34,9 +34,11 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   errorMessages,
   value: _value = "",
   coerceType,
+  checked,
   ...intrinsic
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [isChecked, setIsChecked] = useState(!!checked);
   const [errors, setErrors] = useState<(FieldError | string)[]>([]);
   const [success, setSuccess] = useState(false);
   const [value, setValue] = useState(_value);
@@ -79,6 +81,8 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     name,
     onChange: (e: ChangeEvent<ElementType>) => {
       setValue(registeredTypes[type].getValue(componentRef));
+      if (registeredTypes[type].checkable)
+        setIsChecked((e.currentTarget as HTMLInputElement).checked);
       onChange?.(e);
     },
     onFocus: (e: any) => {
@@ -103,6 +107,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     componentRef,
     setComponentRef,
     errors,
+    checked: isChecked,
     ...intrinsic,
   };
 
@@ -116,7 +121,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
         className,
         `is-${type}`,
         isFocused && "is-focused",
-        intrinsic.checked && "is-checked",
+        isChecked && "is-checked",
         (errorProp || errors.length > 0) && "has-error",
         validation && success && "has-success",
         readOnly && "is-read-only",
