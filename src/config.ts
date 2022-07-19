@@ -8,7 +8,7 @@ import { FieldComponentProps } from "./types";
 
 export const config = {
   displayMultipleErrors: true,
-  errorClassName: "has-error",
+  errorClassName: "modular-form-error",
   fieldClassName: "modular-form-field",
   greedyValidation: true,
   handleSameNameFieldValues: (name, values: any[]) => {
