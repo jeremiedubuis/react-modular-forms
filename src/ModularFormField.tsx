@@ -125,6 +125,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
         (errorProp || errors.length > 0) && "has-error",
         validation && success && "has-success",
         readOnly && "is-read-only",
+        value && "has-value",
         extraClass
       )}
       {...wrapperProps}
