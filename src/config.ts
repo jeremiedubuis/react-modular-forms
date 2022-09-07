@@ -1,3 +1,4 @@
+import React from "react";
 import type { RefObject } from "react";
 import { FieldError, ModularFieldType } from "./enums";
 import { RegularInput } from "./fieldComponents/RegularInput";
@@ -83,7 +84,9 @@ export const registeredTypes = {
 export const registerType = (
   fieldType: string,
   componentOptions: {
-    Component: FieldComponentProps;
+    Component:
+      | React.FC<FieldComponentProps>
+      | React.Component<FieldComponentProps>;
     getValue: (ref: RefObject<any>) => any;
     labelBefore?: boolean;
     extraClass?: string;

@@ -83,7 +83,6 @@ export type ModularFormFieldProps = {
 );
 
 export type FieldComponentProps = {
-  ref: RefObject<any>;
   onChange?: (e: unknown, ...any: any[]) => void;
   onBlur?: (e: React.SyntheticEvent) => void;
   onFocus?: (e: React.SyntheticEvent) => void;
