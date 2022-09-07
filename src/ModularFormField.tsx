@@ -20,7 +20,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   disableOnInvalidForm,
   error: errorProp,
   formId,
-  id,
+  id: _id,
   label,
   name: _name,
   onChange,
@@ -52,11 +52,14 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     setValue(_value);
   }, [_value]);
 
-  const name = Array.isArray(_name)
-    ? arrayToAccessor(_name)
+  const computedName = Array.isArray(_name) ? arrayToAccessor(_name) : _name;
+  const id = _id || formId + computedName;
+
+  const name = computedName
+    ? computedName
     : type !== ModularFieldType.Submit
-    ? _name || id
-    : _name;
+    ? computedName || id
+    : computedName;
 
   useEffect(() => {
     if (!formId) return;

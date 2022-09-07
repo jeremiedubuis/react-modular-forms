@@ -67,7 +67,6 @@ export type ModularFormFieldProps = {
   wrapperProps?: any;
   error?: string;
   formId?: string;
-  id: string;
   label?: string;
   name?: string | (string | number)[];
   type: ModularFieldType | string;
@@ -78,7 +77,10 @@ export type ModularFormFieldProps = {
   errorMessages?: Partial<ErrorMessages>;
   coerceType?: CoerceType;
   [intrinsicAttribute: string]: any;
-};
+} & (
+  | { id: string }
+  | { id?: string; name: string | (string | number)[]; formId: string }
+);
 
 export type FieldComponentProps = {
   onChange?: (e: ChangeEvent<ElementType>) => void;

@@ -14,7 +14,6 @@ ReactDOM.render(
       <ModularFormField
         formId="form"
         type={ModularFieldType.Text}
-        id="text"
         name="blocks[0].text"
         label="Text"
         validation={{ required: true }}
