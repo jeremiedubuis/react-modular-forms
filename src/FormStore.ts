@@ -4,7 +4,7 @@ import { FieldError, ModularFieldType } from "./enums";
 import { FormField } from "./FormField";
 import { config } from "./config";
 import { RefObject } from "react";
-import { accessorsToObject } from "./accessorsToObject";
+import { accessorsToObject } from "./accessorsHelpers";
 
 const forms: FormStore[] = [];
 
@@ -76,7 +76,6 @@ export class FormStore {
   }
 
   unregisterField(id: string) {
-    console.log("un", id);
     const index = this.fields.findIndex((f) => f.id === id);
     if (this.fields[index].disableOnInvalidForm)
       this.fieldsToDisable.splice(
@@ -154,7 +153,6 @@ export class FormStore {
         (field) => field.name === f.name
       );
       if (fieldsWithSameName.length > 1) {
-        console.log(fieldsWithSameName);
         grouped[f.name] = fieldsWithSameName;
         return;
       }

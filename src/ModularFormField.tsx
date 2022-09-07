@@ -9,6 +9,7 @@ import { FormStore } from "./FormStore";
 import { config, registeredTypes } from "./config";
 import type { ElementType, ModularFormFieldProps } from "./types";
 import { FieldError, ModularFieldType } from "./enums";
+import { arrayToAccessor } from "./accessorsHelpers";
 
 const cn = (...classes: (string | false | null | undefined)[]) =>
   classes.filter((c) => c).join(" ");
@@ -51,7 +52,11 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     setValue(_value);
   }, [_value]);
 
-  const name = type !== ModularFieldType.Submit ? _name || id : _name;
+  const name = Array.isArray(_name)
+    ? arrayToAccessor(_name)
+    : type !== ModularFieldType.Submit
+    ? _name || id
+    : _name;
 
   useEffect(() => {
     if (!formId) return;
@@ -80,9 +85,9 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     id,
     name,
     onChange: (e: ChangeEvent<ElementType>) => {
-      setValue(registeredTypes[type].getValue(componentRef));
       if (registeredTypes[type].checkable)
         setIsChecked((e.currentTarget as HTMLInputElement).checked);
+      else setValue(registeredTypes[type].getValue(componentRef));
       onChange?.(e);
     },
     onFocus: (e: any) => {

@@ -34,3 +34,11 @@ export const accessorsToObject = (payload: { [k: string]: any }) => {
 
   return output;
 };
+
+export const arrayToAccessor = (arr: (string | number)[]) =>
+  arr
+    .map((a, i) => {
+      if (typeof a === "number") return "[" + a + "]";
+      return i === 0 ? a : "." + a;
+    })
+    .join("");

@@ -22,7 +22,7 @@ ReactDOM.render(
       <ModularFormField
         formId="form"
         type={ModularFieldType.Checkbox}
-        name="blocks[0].checked"
+        name={["blocks", 0, "checkedNoValue"]}
         id="checkbox"
         label="checkbox"
         validation={{ required: true }}

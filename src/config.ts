@@ -39,7 +39,9 @@ export const registeredTypes = {
     checkable: true,
     getValue: (ref: RefObject<any>) => {
       return ref.current.checked
-        ? ref.current.value || true
+        ? ref.current.getAttribute("value")
+          ? ref.current.value
+          : true
         : ref.current.value
         ? null
         : false;
