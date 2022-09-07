@@ -1,13 +1,7 @@
-import React, {
-  ChangeEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FormStore } from "./FormStore";
 import { config, registeredTypes } from "./config";
-import type { ElementType, ModularFormFieldProps } from "./types";
+import type { ModularFormFieldProps } from "./types";
 import { FieldError, ModularFieldType } from "./enums";
 import { arrayToAccessor } from "./accessorsHelpers";
 
@@ -87,7 +81,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     className,
     id,
     name,
-    onChange: (e: ChangeEvent<ElementType>, ...args: any[]) => {
+    onChange: (e: any, ...args: any[]) => {
       if (registeredTypes[type].checkable)
         setIsChecked((e.currentTarget as HTMLInputElement).checked);
       else setValue(registeredTypes[type].getValue(componentRef));

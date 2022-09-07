@@ -69,7 +69,7 @@ export type ModularFormFieldProps = {
   label?: string;
   name?: string | (string | number)[];
   type: ModularFieldType | string;
-  onChange?: (e: unknown, ...any: any[]) => void;
+  onChange?: (e: any, ...any: any[]) => void;
   onBlur?: (e: React.SyntheticEvent) => void;
   onFocus?: (e: React.SyntheticEvent) => void;
   validation?: ValidationType;
