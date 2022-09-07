@@ -83,7 +83,7 @@ export const registeredTypes = {
 export const registerType = (
   fieldType: string,
   componentOptions: {
-    Component: FieldComponentProps & { [key: string]: any };
+    Component: FieldComponentProps;
     getValue: (ref: RefObject<any>) => any;
     labelBefore?: boolean;
     extraClass?: string;
