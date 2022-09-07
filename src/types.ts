@@ -1,6 +1,5 @@
-import type React, { MutableRefObject } from "react";
+import type React from "react";
 import type { RefObject } from "react";
-import type { ChangeEvent } from "react";
 import { FieldError, ModularFieldType } from "./enums";
 
 export type ElementType =
@@ -88,7 +87,7 @@ export type FieldComponentProps = {
   onFocus?: (e: React.SyntheticEvent) => void;
   errors: (FieldError | string)[];
   validation?: ValidationType;
-  componentRef: MutableRefObject<any>;
+  componentRef: React.MutableRefObject<any>;
   setComponentRef: (value: any) => RefObject<any>;
   [key: string]: any;
 };
