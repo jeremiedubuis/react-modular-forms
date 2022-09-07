@@ -87,11 +87,11 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     className,
     id,
     name,
-    onChange: (e: ChangeEvent<ElementType>) => {
+    onChange: (e: ChangeEvent<ElementType>, ...args: any[]) => {
       if (registeredTypes[type].checkable)
         setIsChecked((e.currentTarget as HTMLInputElement).checked);
       else setValue(registeredTypes[type].getValue(componentRef));
-      onChange?.(e);
+      onChange?.(e, ...args);
     },
     onFocus: (e: any) => {
       setIsFocused(true);
