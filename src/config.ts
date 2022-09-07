@@ -5,6 +5,7 @@ import { RegularInput } from "./fieldComponents/RegularInput";
 import { Textarea } from "./fieldComponents/Textarea";
 import { Select } from "./fieldComponents/Select";
 import { FieldComponentProps } from "./types";
+import { HiddenInput } from "./fieldComponents/HiddenInput";
 
 export const config = {
   displayMultipleErrors: true,
@@ -58,7 +59,12 @@ export const registeredTypes = {
         : ref.current.files[0];
     },
   },
-  [ModularFieldType.Hidden]: regularInputType,
+  [ModularFieldType.Hidden]: {
+    Component: HiddenInput,
+    getValue: (ref: RefObject<HTMLInputElement>) => {
+      return JSON.parse(ref.current.value);
+    },
+  },
   [ModularFieldType.Number]: regularInputType,
   [ModularFieldType.Password]: regularInputType,
   [ModularFieldType.Radio]: {

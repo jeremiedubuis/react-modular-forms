@@ -13,6 +13,12 @@ ReactDOM.render(
     >
       <ModularFormField
         formId="form"
+        type={ModularFieldType.Hidden}
+        name="blocks[0].hidden"
+        value={["0", 1]}
+      />
+      <ModularFormField
+        formId="form"
         type={ModularFieldType.Text}
         name="blocks[0].text"
         label="Text"
