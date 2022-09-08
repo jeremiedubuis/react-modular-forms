@@ -7,8 +7,13 @@ export const HiddenInput: React.FC<
   type,
   disabled,
   value,
+  onBlur,
+  onFocus,
   onChange,
+  errors,
+  validation,
   componentRef,
+  setComponentRef,
   children,
   ...intrinsic
 }) => {
