@@ -1,4 +1,4 @@
-import React, { ForwardedRef } from "react";
+import React, { ForwardedRef, useEffect } from "react";
 import { FormStore } from "./FormStore";
 import type { ModularFormProps } from "./types";
 
@@ -14,27 +14,32 @@ export const ModularForm: React.FC<ModularFormProps> = React.forwardRef(
       ...intrinsic
     },
     ref: ForwardedRef<FormStore>
-  ) => (
-    <form
-      id={id}
-      {...intrinsic}
-      onSubmit={(e) => {
+  ) => {
+    useEffect(() => {
+      if (ref) {
         const form = FormStore.getForm(id);
-        if (ref) {
-          if (typeof ref === "function") ref(form);
-          else ref.current = form;
-        }
-        form.set(handleSameNameFieldValues, parseAccessors);
-        const errors = form.getErrors(false);
-        if (!errors.length) {
-          onSubmit?.(e, form.getValues());
-        } else {
-          e.preventDefault();
-          onSubmitError?.(e, errors);
-        }
-      }}
-    >
-      {children}
-    </form>
-  )
+        if (typeof ref === "function") ref(form);
+        else ref.current = form;
+      }
+    }, []);
+    return (
+      <form
+        id={id}
+        {...intrinsic}
+        onSubmit={(e) => {
+          const form = FormStore.getForm(id);
+          form.set(handleSameNameFieldValues, parseAccessors);
+          const errors = form.getErrors(false);
+          if (!errors.length) {
+            onSubmit?.(e, form.getValues());
+          } else {
+            e.preventDefault();
+            onSubmitError?.(e, errors);
+          }
+        }}
+      >
+        {children}
+      </form>
+    );
+  }
 );
