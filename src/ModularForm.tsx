@@ -22,13 +22,17 @@ export const ModularForm: React.FC<ModularFormProps> = React.forwardRef(
         else ref.current = form;
       }
     }, []);
+
+    useEffect(() => {
+      const form = FormStore.getForm(id);
+      form.set(handleSameNameFieldValues, parseAccessors);
+    }, [handleSameNameFieldValues, parseAccessors]);
     return (
       <form
         id={id}
         {...intrinsic}
         onSubmit={(e) => {
           const form = FormStore.getForm(id);
-          form.set(handleSameNameFieldValues, parseAccessors);
           const errors = form.getErrors(false);
           if (!errors.length) {
             onSubmit?.(e, form.getValues());
