@@ -143,7 +143,7 @@ export class FormStore {
   getFieldsIngroup = (group) =>
     this.fields.filter((f) => f.validation?.group === group);
 
-  getValues(): FormValues {
+  getValues = (): FormValues => {
     const grouped = {};
     const singleFields: FormField[] = [];
 
@@ -177,7 +177,7 @@ export class FormStore {
       values = accessorsToObject(values);
     }
     return values;
-  }
+  };
 
   getErrors(silent = true) {
     let errors: [string, (string | FieldError)[]][] = [];
