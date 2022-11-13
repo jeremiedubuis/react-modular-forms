@@ -81,6 +81,19 @@ ReactDOM.render(
       />
       <ModularFormField
         formId="form"
+        type={ModularFieldType.File}
+        id="file"
+        label="File"
+      />
+      <ModularFormField
+        formId="form"
+        type={ModularFieldType.File}
+        id="files"
+        multiple
+        label="Files"
+      />
+      <ModularFormField
+        formId="form"
         type={ModularFieldType.Select}
         id="select"
         label="select"

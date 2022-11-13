@@ -6,6 +6,7 @@ import { Textarea } from "./fieldComponents/Textarea";
 import { Select } from "./fieldComponents/Select";
 import { FieldComponentProps } from "./types";
 import { HiddenInput } from "./fieldComponents/HiddenInput";
+import { FileInput } from "./fieldComponents/FileInput";
 
 export const config = {
   displayMultipleErrors: true,
@@ -52,9 +53,10 @@ export const registeredTypes = {
   [ModularFieldType.Date]: regularInputType,
   [ModularFieldType.Email]: regularInputType,
   [ModularFieldType.File]: {
-    ...regularInputType,
+    Component: FileInput,
+    labelBefore: true,
     getValue: (ref: RefObject<any>) => {
-      return ref.current.getAttribute("multiple")
+      return ref.current.hasAttribute("multiple")
         ? [...ref.current.files]
         : ref.current.files[0];
     },
