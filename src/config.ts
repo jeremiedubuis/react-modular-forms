@@ -95,7 +95,7 @@ export const registerType = (
     Component:
       | React.FC<FieldComponentProps>
       | React.Component<FieldComponentProps>
-      | ((props: FieldComponentProps) => ReactNode);
+      | ((props: FieldComponentProps) => ReactNode | JSX.Element);
     getValue: (ref: RefObject<any>) => any;
     labelBefore?: boolean;
     extraClass?: string;
