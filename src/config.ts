@@ -1,5 +1,5 @@
 import React from "react";
-import type { RefObject } from "react";
+import type { RefObject, ReactNode } from "react";
 import { FieldError, ModularFieldType } from "./enums";
 import { RegularInput } from "./fieldComponents/RegularInput";
 import { Textarea } from "./fieldComponents/Textarea";
@@ -94,7 +94,8 @@ export const registerType = (
   componentOptions: {
     Component:
       | React.FC<FieldComponentProps>
-      | React.Component<FieldComponentProps>;
+      | React.Component<FieldComponentProps>
+      | ((props: FieldComponentProps) => ReactNode);
     getValue: (ref: RefObject<any>) => any;
     labelBefore?: boolean;
     extraClass?: string;
