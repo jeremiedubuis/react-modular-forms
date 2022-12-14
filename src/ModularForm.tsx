@@ -1,6 +1,7 @@
 import React, { ForwardedRef, useEffect } from "react";
 import { FormStore } from "./FormStore";
 import type { ModularFormProps } from "./types";
+import { config } from "./config";
 
 export const ModularForm: React.FC<ModularFormProps> = React.forwardRef(
   (
@@ -30,6 +31,7 @@ export const ModularForm: React.FC<ModularFormProps> = React.forwardRef(
     return (
       <form
         id={id}
+        method={config.defaultFormMethod}
         {...intrinsic}
         onSubmit={(e) => {
           const form = FormStore.getForm(id);

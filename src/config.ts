@@ -9,6 +9,7 @@ import { HiddenInput } from "./fieldComponents/HiddenInput";
 import { FileInput } from "./fieldComponents/FileInput";
 
 export const config = {
+  defaultFormMethod: "POST",
   displayMultipleErrors: true,
   errorClassName: "modular-form-error",
   fieldClassName: "modular-form-field",
