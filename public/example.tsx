@@ -1,6 +1,52 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import { ModularFieldType, ModularForm, ModularFormField } from "../src";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import {
+  ModularFieldType,
+  ModularForm,
+  ModularFormField,
+  registerType,
+  FieldComponentProps
+} from '../src';
+
+registerType('address-fields', {
+  Component: ({ formId, prefix = '' }: FieldComponentProps & { prefix?: string }) => {
+    console.log({ formId });
+    return (
+      <>
+        <ModularFormField
+          formId={formId}
+          type="text"
+          name={`${prefix}address`}
+          label="Address"
+          validation={{ required: true }}
+        />
+        <ModularFormField
+          formId={formId}
+          type="text"
+          name={`${prefix}city`}
+          label="City"
+          validation={{ required: true }}
+        />
+        <ModularFormField
+          formId={formId}
+          type="tel"
+          name={`${prefix}zipcode`}
+          label="Zipcode"
+          validation={{ required: true }}
+        />
+        <ModularFormField
+          formId={formId}
+          type="text"
+          name={`${prefix}country`}
+          label="Country"
+          validation={{ required: true }}
+        />
+      </>
+    );
+  },
+  isStatic: true
+});
+
 ReactDOM.render(
   <React.StrictMode>
     <ModularForm
@@ -15,7 +61,7 @@ ReactDOM.render(
         formId="form"
         type={ModularFieldType.Hidden}
         name="blocks[0].hidden"
-        value={["0", 1]}
+        value={['0', 1]}
       />
       <ModularFormField
         formId="form"
@@ -27,7 +73,7 @@ ReactDOM.render(
       <ModularFormField
         formId="form"
         type={ModularFieldType.Checkbox}
-        name={["blocks", 0, "checkedNoValue"]}
+        name={['blocks', 0, 'checkedNoValue']}
         id="checkbox"
         label="checkbox"
         validation={{ required: true }}
@@ -39,7 +85,7 @@ ReactDOM.render(
         name="blocks[0].checked2"
         label="A"
         value="a"
-        validation={{ group: "cb" }}
+        validation={{ group: 'cb' }}
       />
       <ModularFormField
         formId="form"
@@ -48,7 +94,7 @@ ReactDOM.render(
         name="abc"
         label="B"
         value="b"
-        validation={{ group: "cb" }}
+        validation={{ group: 'cb' }}
       />
       <ModularFormField
         formId="form"
@@ -57,7 +103,7 @@ ReactDOM.render(
         name="abc"
         label="C"
         value="c"
-        validation={{ group: "cb" }}
+        validation={{ group: 'cb' }}
       />
       <ModularFormField
         formId="form"
@@ -65,8 +111,8 @@ ReactDOM.render(
         id="tel"
         label="Tel 1"
         validation={{
-          group: "tel",
-          negativeRegExps: { "Must be number": /^\d*$/ },
+          group: 'tel',
+          negativeRegExps: { 'Must be number': /^\d*$/ }
         }}
       />
       <ModularFormField
@@ -75,16 +121,11 @@ ReactDOM.render(
         id="tel2"
         label="Tel 2"
         validation={{
-          group: "tel",
-          negativeRegExps: { "Must be number": /^\d*$/ },
+          group: 'tel',
+          negativeRegExps: { 'Must be number': /^\d*$/ }
         }}
       />
-      <ModularFormField
-        formId="form"
-        type={ModularFieldType.File}
-        id="file"
-        label="File"
-      />
+      <ModularFormField formId="form" type={ModularFieldType.File} id="file" label="File" />
       <ModularFormField
         formId="form"
         type={ModularFieldType.File}
@@ -92,15 +133,11 @@ ReactDOM.render(
         multiple
         label="Files"
       />
-      <ModularFormField
-        formId="form"
-        type={ModularFieldType.Select}
-        id="select"
-        label="select"
-      >
+      <ModularFormField formId="form" type={ModularFieldType.Select} id="select" label="select">
         <option>Sélectionner une option</option>
         <option value="value">Valeur</option>
       </ModularFormField>
+      <ModularFormField formId="form" id="address-fields" type="address-fields" />
       <ModularFormField
         formId="form"
         type={ModularFieldType.Submit}
@@ -110,5 +147,5 @@ ReactDOM.render(
       />
     </ModularForm>
   </React.StrictMode>,
-  document.getElementById("app")
+  document.getElementById('app')
 );

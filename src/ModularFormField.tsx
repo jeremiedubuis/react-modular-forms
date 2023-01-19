@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { FormStore } from "./FormStore";
-import { config, registeredTypes } from "./config";
-import type { ModularFormFieldProps } from "./types";
-import { FieldError, ModularFieldType } from "./enums";
-import { arrayToAccessor } from "./accessorsHelpers";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { FormStore } from './FormStore';
+import { config, registeredTypes } from './config';
+import type { ModularFormFieldProps } from './types';
+import { FieldError, ModularFieldType } from './enums';
+import { arrayToAccessor } from './accessorsHelpers';
 
 const cn = (...classes: (string | false | null | undefined)[]) =>
-  classes.filter((c) => c).join(" ");
+  classes.filter((c) => c).join(' ');
 
 export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   children,
@@ -27,7 +27,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   disabled,
   readOnly,
   errorMessages,
-  value: _value = "",
+  value: _value = '',
   coerceType,
   checked,
   ...intrinsic
@@ -56,7 +56,8 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     : computedName;
 
   useEffect(() => {
-    if (!formId) return;
+    console.log(formId, name, registeredTypes[type].isStatic);
+    if (!formId || registeredTypes[type].isStatic) return;
     const form = FormStore.getForm(formId);
     if (name) {
       form.registerField(
@@ -76,32 +77,13 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     }
   }, [name]);
 
-  const sharedProps = {
+  let sharedProps: any = {
     children,
     className,
     id,
     name,
-    onChange: (e: any, ...args: any[]) => {
-      if (registeredTypes[type].checkable)
-        setIsChecked((e.currentTarget as HTMLInputElement).checked);
-      else setValue(registeredTypes[type].getValue(componentRef));
-      onChange?.(e, ...args);
-    },
-    onFocus: (e: any) => {
-      setIsFocused(true);
-      onFocus?.(e);
-    },
-    onBlur: (e: any) => {
-      setIsFocused(false);
-      const validateOnBlur =
-        typeof validation?.validateOnBlur !== "undefined"
-          ? validation.validateOnBlur
-          : config.validateOnBlur;
-      if (formId && validateOnBlur) FormStore.getForm(formId).validateField(id);
-      onBlur?.(e);
-    },
-    "aria-invalid": !!errors,
-    "aria-required": validation?.required,
+    'aria-invalid': !!errors,
+    'aria-required': validation?.required,
     disabled,
     readOnly,
     type,
@@ -110,8 +92,34 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     setComponentRef,
     errors,
     checked: isChecked,
-    ...intrinsic,
+    formId,
+    ...intrinsic
   };
+
+  if (!registeredTypes[type].isStatic) {
+    sharedProps = {
+      ...sharedProps,
+      onChange: (e: any, ...args: any[]) => {
+        if (registeredTypes[type].checkable)
+          setIsChecked((e.currentTarget as HTMLInputElement).checked);
+        else setValue(registeredTypes[type].getValue(componentRef));
+        onChange?.(e, ...args);
+      },
+      onFocus: (e: any) => {
+        setIsFocused(true);
+        onFocus?.(e);
+      },
+      onBlur: (e: any) => {
+        setIsFocused(false);
+        const validateOnBlur =
+          typeof validation?.validateOnBlur !== 'undefined'
+            ? validation.validateOnBlur
+            : config.validateOnBlur;
+        if (formId && validateOnBlur) FormStore.getForm(formId).validateField(id);
+        onBlur?.(e);
+      }
+    };
+  }
 
   const Component = registeredTypes[type].Component;
   const extraClass = registeredTypes[type].extraClass;
@@ -122,30 +130,26 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
         config.fieldClassName,
         className,
         `is-${type}`,
-        isFocused && "is-focused",
-        isChecked && "is-checked",
-        (errorProp || errors.length > 0) && "has-error",
-        validation && success && "has-success",
-        readOnly && "is-read-only",
-        value && "has-value",
+        isFocused && 'is-focused',
+        isChecked && 'is-checked',
+        (errorProp || errors.length > 0) && 'has-error',
+        validation && success && 'has-success',
+        readOnly && 'is-read-only',
+        value && 'has-value',
         extraClass
       )}
       {...wrapperProps}
     >
-      {registeredTypes[type].labelBefore && label && (
-        <label htmlFor={id}>{label}</label>
-      )}
+      {registeredTypes[type].labelBefore && label && <label htmlFor={id}>{label}</label>}
       <Component {...sharedProps} />
-      {!registeredTypes[type].labelBefore && label && (
-        <label htmlFor={id}>{label}</label>
-      )}
+      {!registeredTypes[type].labelBefore && label && <label htmlFor={id}>{label}</label>}
 
       {(errorProp || errors.length > 0) && (
         <div
           className={config.errorClassName}
           {...{
-            "aria-live": "polite",
-            "aria-relevant": "text",
+            'aria-live': 'polite',
+            'aria-relevant': 'text'
           }}
         >
           {errorProp ? (
@@ -153,11 +157,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
           ) : (
             errors
               .slice(0, config.displayMultipleErrors ? errors.length : 1)
-              .map((e, i) => (
-                <p key={i}>
-                  {errorMessages?.[e] || config.errorMessages[e] || e}
-                </p>
-              ))
+              .map((e, i) => <p key={i}>{errorMessages?.[e] || config.errorMessages[e] || e}</p>)
           )}
         </div>
       )}

@@ -2,7 +2,7 @@ import type { ValidationType } from "./types";
 import { CoerceType, FormValues, SameNameFieldValuesHandler } from "./types";
 import { FieldError, ModularFieldType } from "./enums";
 import { FormField } from "./FormField";
-import { config } from "./config";
+import { config, registeredTypes } from "./config";
 import { RefObject } from "react";
 import { accessorsToObject } from "./accessorsHelpers";
 
@@ -46,7 +46,7 @@ export class FormStore {
 
   registerField(
     id: string,
-    type: ModularFieldType | string,
+    type: keyof typeof registeredTypes,
     name: string,
     componentRef,
     getValue: (ref: RefObject<any>) => any,

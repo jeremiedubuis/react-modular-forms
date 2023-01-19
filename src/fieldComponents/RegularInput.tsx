@@ -1,9 +1,7 @@
-import React from "react";
-import { FieldComponentProps } from "../types";
+import React from 'react';
+import { FieldComponentProps } from '../types';
 
-export const RegularInput: React.FC<
-  React.HTMLProps<HTMLInputElement> & FieldComponentProps
-> = ({
+export const RegularInput: React.FC<React.HTMLProps<HTMLInputElement> & FieldComponentProps> = ({
   type,
   disabled,
   value,
@@ -15,6 +13,7 @@ export const RegularInput: React.FC<
   componentRef,
   setComponentRef,
   children,
+  formId,
   ...intrinsic
 }) => {
   const sharedProps = {
@@ -22,11 +21,11 @@ export const RegularInput: React.FC<
     onChange,
     onFocus,
     onBlur,
-    "aria-invalid": !!errors,
-    "aria-required": validation?.required,
+    'aria-invalid': !!errors,
+    'aria-required': validation?.required,
     disabled,
     value,
-    ...intrinsic,
+    ...intrinsic
   };
 
   return (

@@ -1,9 +1,7 @@
-import React from "react";
-import { FieldComponentProps } from "../types";
+import React from 'react';
+import { FieldComponentProps } from '../types';
 
-export const HiddenInput: React.FC<
-  React.HTMLProps<HTMLInputElement> & FieldComponentProps
-> = ({
+export const HiddenInput: React.FC<React.HTMLProps<HTMLInputElement> & FieldComponentProps> = ({
   type,
   disabled,
   value,
@@ -15,6 +13,7 @@ export const HiddenInput: React.FC<
   componentRef,
   setComponentRef,
   children,
+  formId,
   ...intrinsic
 }) => {
   const sharedProps = {
@@ -22,7 +21,7 @@ export const HiddenInput: React.FC<
     onChange,
     disabled,
     value: JSON.stringify(value),
-    ...intrinsic,
+    ...intrinsic
   };
 
   return (

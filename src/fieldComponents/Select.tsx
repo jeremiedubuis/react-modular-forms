@@ -1,9 +1,7 @@
-import React from "react";
-import { FieldComponentProps } from "../types";
+import React from 'react';
+import { FieldComponentProps } from '../types';
 
-export const Select: React.FC<
-  React.HTMLProps<HTMLSelectElement> & FieldComponentProps
-> = ({
+export const Select: React.FC<React.HTMLProps<HTMLSelectElement> & FieldComponentProps> = ({
   type,
   disabled,
   value,
@@ -16,6 +14,7 @@ export const Select: React.FC<
   setComponentRef,
   children,
   readOnly,
+  formId,
   ...intrinsic
 }) => {
   const sharedProps = {
@@ -23,16 +22,14 @@ export const Select: React.FC<
     onChange,
     onFocus,
     onBlur,
-    "aria-invalid": !!errors,
-    "aria-required": validation?.required,
+    'aria-invalid': !!errors,
+    'aria-required': validation?.required,
     disabled,
     value,
-    ...intrinsic,
+    ...intrinsic
   };
   const c = readOnly
-    ? React.Children.toArray(children).filter(
-        ({ props }: any) => props.value === value
-      )
+    ? React.Children.toArray(children).filter(({ props }: any) => props.value === value)
     : children;
 
   return <select {...sharedProps}>{c}</select>;
