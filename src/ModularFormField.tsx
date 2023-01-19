@@ -33,6 +33,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   checked,
   errorHtmlElement,
   hideErrors,
+  onErrorChange,
   ...intrinsic
 }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -126,6 +127,10 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
 
   const Component = registeredTypes[type].Component;
   const extraClass = registeredTypes[type].extraClass;
+
+  useEffect(() => {
+    onErrorChange?.(errors);
+  }, [errors]);
 
   const errorContent = !hideErrors && (errorProp || errors.length > 0) && (
     <div

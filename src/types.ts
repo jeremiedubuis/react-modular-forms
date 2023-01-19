@@ -89,6 +89,7 @@ export type ModularFormFieldProps = {
   coerceType?: CoerceType;
   errorHtmlElement?: string | HTMLElement;
   hideErrors?: boolean;
+  onErrorChange?: (errors: (FieldError | string)[]) => void;
   [intrinsicAttribute: string]: any;
 } & ({ id: string } | { id?: string; name: string | (string | number)[]; formId: string });
 
