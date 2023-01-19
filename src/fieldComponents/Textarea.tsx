@@ -14,6 +14,7 @@ export const Textarea: React.FC<React.HTMLProps<HTMLTextAreaElement> & FieldComp
   componentRef,
   children,
   formId,
+  errorHtmlElement,
   ...intrinsic
 }) => {
   const sharedProps = {

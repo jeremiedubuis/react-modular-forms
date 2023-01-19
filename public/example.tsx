@@ -9,8 +9,11 @@ import {
 } from '../src';
 
 registerType('address-fields', {
-  Component: ({ formId, prefix = '' }: FieldComponentProps & { prefix?: string }) => {
-    console.log({ formId });
+  Component: ({
+    formId,
+    prefix = '',
+    errorHtmlElement
+  }: FieldComponentProps & { prefix?: string }) => {
     return (
       <>
         <ModularFormField
@@ -19,6 +22,7 @@ registerType('address-fields', {
           name={`${prefix}address`}
           label="Address"
           validation={{ required: true }}
+          errorHtmlElement={errorHtmlElement}
         />
         <ModularFormField
           formId={formId}
@@ -26,6 +30,7 @@ registerType('address-fields', {
           name={`${prefix}city`}
           label="City"
           validation={{ required: true }}
+          errorHtmlElement={errorHtmlElement}
         />
         <ModularFormField
           formId={formId}
@@ -33,6 +38,7 @@ registerType('address-fields', {
           name={`${prefix}zipcode`}
           label="Zipcode"
           validation={{ required: true }}
+          errorHtmlElement={errorHtmlElement}
         />
         <ModularFormField
           formId={formId}
@@ -40,6 +46,7 @@ registerType('address-fields', {
           name={`${prefix}country`}
           label="Country"
           validation={{ required: true }}
+          errorHtmlElement={errorHtmlElement}
         />
       </>
     );
@@ -137,7 +144,12 @@ ReactDOM.render(
         <option>Sélectionner une option</option>
         <option value="value">Valeur</option>
       </ModularFormField>
-      <ModularFormField formId="form" id="address-fields" type="address-fields" />
+      <ModularFormField
+        formId="form"
+        id="address-fields"
+        type="address-fields"
+        errorHtmlElement={'#address-errors'}
+      />
       <ModularFormField
         formId="form"
         type={ModularFieldType.Submit}
@@ -145,6 +157,11 @@ ReactDOM.render(
         value="Submit"
         disableOnInvalidForm={true}
       />
+
+      <div>
+        Address errors should be deported here:
+        <div id="address-errors"></div>
+      </div>
     </ModularForm>
   </React.StrictMode>,
   document.getElementById('app')

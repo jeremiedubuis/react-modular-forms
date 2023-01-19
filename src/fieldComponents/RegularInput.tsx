@@ -14,6 +14,7 @@ export const RegularInput: React.FC<React.HTMLProps<HTMLInputElement> & FieldCom
   setComponentRef,
   children,
   formId,
+  errorHtmlElement,
   ...intrinsic
 }) => {
   const sharedProps = {

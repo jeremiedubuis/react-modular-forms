@@ -87,6 +87,8 @@ export type ModularFormFieldProps = {
   validation?: ValidationType;
   errorMessages?: Partial<ErrorMessages>;
   coerceType?: CoerceType;
+  errorHtmlElement?: string | HTMLElement;
+  hideErrors?: boolean;
   [intrinsicAttribute: string]: any;
 } & ({ id: string } | { id?: string; name: string | (string | number)[]; formId: string });
 

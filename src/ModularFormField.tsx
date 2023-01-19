@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import ReactDOM from 'react-dom';
 import { FormStore } from './FormStore';
 import { config, registeredTypes } from './config';
 import type { ModularFormFieldProps } from './types';
@@ -30,6 +31,8 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   value: _value = '',
   coerceType,
   checked,
+  errorHtmlElement,
+  hideErrors,
   ...intrinsic
 }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -56,7 +59,6 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     : computedName;
 
   useEffect(() => {
-    console.log(formId, name, registeredTypes[type].isStatic);
     if (!formId || registeredTypes[type].isStatic) return;
     const form = FormStore.getForm(formId);
     if (name) {
@@ -93,6 +95,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     errors,
     checked: isChecked,
     formId,
+    errorHtmlElement,
     ...intrinsic
   };
 
@@ -124,6 +127,24 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   const Component = registeredTypes[type].Component;
   const extraClass = registeredTypes[type].extraClass;
 
+  const errorContent = !hideErrors && (errorProp || errors.length > 0) && (
+    <div
+      className={config.errorClassName}
+      {...{
+        'aria-live': 'polite',
+        'aria-relevant': 'text'
+      }}
+    >
+      {errorProp ? (
+        <p>{errorProp}</p>
+      ) : (
+        errors
+          .slice(0, config.displayMultipleErrors ? errors.length : 1)
+          .map((e, i) => <p key={i}>{errorMessages?.[e] || config.errorMessages[e] || e}</p>)
+      )}
+    </div>
+  );
+
   return (
     <div
       className={cn(
@@ -144,23 +165,16 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
       <Component {...sharedProps} />
       {!registeredTypes[type].labelBefore && label && <label htmlFor={id}>{label}</label>}
 
-      {(errorProp || errors.length > 0) && (
-        <div
-          className={config.errorClassName}
-          {...{
-            'aria-live': 'polite',
-            'aria-relevant': 'text'
-          }}
-        >
-          {errorProp ? (
-            <p>{errorProp}</p>
-          ) : (
-            errors
-              .slice(0, config.displayMultipleErrors ? errors.length : 1)
-              .map((e, i) => <p key={i}>{errorMessages?.[e] || config.errorMessages[e] || e}</p>)
-          )}
-        </div>
-      )}
+      {errorContent
+        ? errorHtmlElement
+          ? ReactDOM.createPortal(
+              errorContent,
+              typeof errorHtmlElement === 'string'
+                ? document.querySelector(errorHtmlElement)
+                : errorHtmlElement
+            )
+          : errorContent
+        : null}
     </div>
   );
 };
