@@ -120,6 +120,7 @@ export class FormField implements IFormFieldOptions {
   }
 
   coerce(value: any) {
+    if (value === null || value === undefined) return value;
     switch (this.coerceType) {
       case 'array':
         return Array.isArray(value) ? value : [value];
