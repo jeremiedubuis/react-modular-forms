@@ -124,7 +124,7 @@ export class FormField implements IFormFieldOptions {
       case 'array':
         return Array.isArray(value)
           ? value
-          : typeof value === 'undefined' || value === null
+          : typeof value === 'undefined' || value === null || value === ''
           ? []
           : [value];
       case 'int':
