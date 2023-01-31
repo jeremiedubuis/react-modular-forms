@@ -60,7 +60,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     : computedName;
 
   useEffect(() => {
-    if (!formId || registeredTypes[type].isStatic) return;
+    if (!formId || registeredTypes[type]?.isStatic) return;
     const form = FormStore.getForm(formId);
     if (name) {
       form.registerField(
@@ -100,7 +100,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     ...intrinsic
   };
 
-  if (!registeredTypes[type].isStatic) {
+  if (!registeredTypes[type]?.isStatic) {
     sharedProps = {
       ...sharedProps,
       onChange: (e: any, ...args: any[]) => {
