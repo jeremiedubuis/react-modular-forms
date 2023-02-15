@@ -50,6 +50,10 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     setValue(_value);
   }, [_value]);
 
+  useEffect(() => {
+    setIsChecked(!!checked);
+  }, [checked]);
+
   const computedName = Array.isArray(_name) ? arrayToAccessor(_name) : _name;
   const id = _id || formId + computedName;
 
