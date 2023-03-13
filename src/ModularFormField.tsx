@@ -95,6 +95,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     readOnly,
     type,
     value,
+    setValue,
     componentRef,
     setComponentRef,
     errors,
