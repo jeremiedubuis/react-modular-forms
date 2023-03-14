@@ -5,8 +5,11 @@ import {
   ModularForm,
   ModularFormField,
   registerType,
-  FieldComponentProps
+  FieldComponentProps,
+  config
 } from '../src';
+
+config.sendEmptyStringsAs = undefined;
 
 registerType('address-fields', {
   Component: ({
@@ -150,6 +153,7 @@ ReactDOM.render(
         type="address-fields"
         errorHtmlElement={'#address-errors'}
       />
+      <ModularFormField formId="form" id="optional" type="text" name="optional" label="optional" />
       <ModularFormField
         formId="form"
         type={ModularFieldType.Submit}

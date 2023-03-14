@@ -21,6 +21,7 @@ export const config: ModularFormConfiguration = {
       )
     };
   },
+  sendEmptyStringsAs: '',
   handleSingleCheckboxAsArray: false,
   validateOnBlur: true,
   errorMessages: {

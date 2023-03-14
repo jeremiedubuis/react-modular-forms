@@ -59,6 +59,7 @@ export type ModularFormConfiguration = {
   errorMessages: {
     [key: string]: string;
   };
+  sendEmptyStringsAs: undefined | null | '';
 };
 
 export type ModularFormProps = {

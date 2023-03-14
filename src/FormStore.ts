@@ -1,18 +1,16 @@
-import type { ValidationType } from "./types";
-import { CoerceType, FormValues, SameNameFieldValuesHandler } from "./types";
-import { FieldError, ModularFieldType } from "./enums";
-import { FormField } from "./FormField";
-import { config, registeredTypes } from "./config";
-import { RefObject } from "react";
-import { accessorsToObject } from "./accessorsHelpers";
+import type { ValidationType } from './types';
+import { CoerceType, FormValues, SameNameFieldValuesHandler } from './types';
+import { FieldError, ModularFieldType } from './enums';
+import { FormField } from './FormField';
+import { config, registeredTypes } from './config';
+import { RefObject } from 'react';
+import { accessorsToObject } from './accessorsHelpers';
 
 const forms: FormStore[] = [];
 
 export class FormStore {
   static getForm(id: string) {
-    return (
-      forms.find((f) => f.id === id) || forms[forms.push(new FormStore(id)) - 1]
-    );
+    return forms.find((f) => f.id === id) || forms[forms.push(new FormStore(id)) - 1];
   }
 
   private id: string;
@@ -24,12 +22,8 @@ export class FormStore {
   private disableDebounce = false;
   private parseAccessors = false;
 
-  set(
-    handleSameNameFieldValues?: SameNameFieldValuesHandler,
-    parseAccessors?: boolean
-  ) {
-    if (handleSameNameFieldValues)
-      this.handleSameNameFieldValues = handleSameNameFieldValues;
+  set(handleSameNameFieldValues?: SameNameFieldValuesHandler, parseAccessors?: boolean) {
+    if (handleSameNameFieldValues) this.handleSameNameFieldValues = handleSameNameFieldValues;
     this.parseAccessors = !!parseAccessors;
   }
 
@@ -39,8 +33,7 @@ export class FormStore {
     parseAccessors?: boolean
   ) {
     this.id = id;
-    this.handleSameNameFieldValues =
-      handleSameNameFieldValues || config.handleSameNameFieldValues;
+    this.handleSameNameFieldValues = handleSameNameFieldValues || config.handleSameNameFieldValues;
     this.parseAccessors = !!parseAccessors;
   }
 
@@ -66,7 +59,7 @@ export class FormStore {
       setSuccess,
       setErrors,
       disableOnInvalidForm,
-      coerceType,
+      coerceType
     });
     this.fields.push(ff);
     if (disableOnInvalidForm) {
@@ -78,10 +71,7 @@ export class FormStore {
   unregisterField(id: string) {
     const index = this.fields.findIndex((f) => f.id === id);
     if (this.fields[index].disableOnInvalidForm)
-      this.fieldsToDisable.splice(
-        this.fieldsToDisable.indexOf(this.fields[index]),
-        1
-      );
+      this.fieldsToDisable.splice(this.fieldsToDisable.indexOf(this.fields[index]), 1);
     if (index > -1) this.fields.splice(index, 1);
   }
 
@@ -114,9 +104,7 @@ export class FormStore {
     let validation;
 
     if (
-      ![ModularFieldType.Checkbox, ModularFieldType.Radio].includes(
-        field.type as ModularFieldType
-      )
+      ![ModularFieldType.Checkbox, ModularFieldType.Radio].includes(field.type as ModularFieldType)
     ) {
       validation = field.validation;
       value = field.getValue();
@@ -128,8 +116,7 @@ export class FormStore {
         value = checked[0]?.getValue();
       } else {
         value = checked.map((f) => f.getValue());
-        if (fields.length === 1 && !config.handleSingleCheckboxAsArray)
-          value = value[0];
+        if (fields.length === 1 && !config.handleSingleCheckboxAsArray) value = value[0];
       }
     }
 
@@ -140,8 +127,7 @@ export class FormStore {
 
   getField = (fieldId: string) => this.fields.find(({ id }) => id === fieldId);
 
-  getFieldsIngroup = (group) =>
-    this.fields.filter((f) => f.validation?.group === group);
+  getFieldsIngroup = (group) => this.fields.filter((f) => f.validation?.group === group);
 
   getValues = (): FormValues => {
     const grouped = {};
@@ -149,9 +135,7 @@ export class FormStore {
 
     this.fields.forEach((f) => {
       if (grouped[f.name]) return;
-      const fieldsWithSameName = this.fields.filter(
-        (field) => field.name === f.name
-      );
+      const fieldsWithSameName = this.fields.filter((field) => field.name === f.name);
       if (fieldsWithSameName.length > 1) {
         grouped[f.name] = fieldsWithSameName;
         return;
@@ -170,12 +154,19 @@ export class FormStore {
         ...this.handleSameNameFieldValues(
           name,
           grouped[name].map((f) => f.getValue())
-        ),
+        )
       };
     });
     if (this.parseAccessors) {
       values = accessorsToObject(values);
     }
+
+    if (config.sendEmptyStringsAs !== '') {
+      for (let key in values) {
+        if (values[key] === '') values[key] = config.sendEmptyStringsAs;
+      }
+    }
+
     return values;
   };
 
@@ -201,9 +192,7 @@ export class FormStore {
     const errors = this.getFieldErrors(fieldId);
     field.setErrors(errors);
     if (!ignoreGroup && field.validation?.group) {
-      const fields = this.getFieldsIngroup(field.validation.group).filter(
-        (f) => f.id !== fieldId
-      );
+      const fields = this.getFieldsIngroup(field.validation.group).filter((f) => f.id !== fieldId);
       fields.forEach((f) => this.validateField(f.id, true));
     }
     this.disableFieldsIfFormInvalid();
@@ -214,10 +203,8 @@ export class FormStore {
       clearTimeout(this.disableTimeout);
       if (!this.disableDebounce) {
         this.disableDebounce = true;
-        const formErrors =
-          typeof errors !== undefined ? errors : this.getErrors(true);
-        const disabled =
-          typeof formErrors !== "undefined" && formErrors.length > 1;
+        const formErrors = typeof errors !== undefined ? errors : this.getErrors(true);
+        const disabled = typeof formErrors !== 'undefined' && formErrors.length > 1;
         this.fieldsToDisable.forEach((f) => f.setDisabled(disabled));
         this.disableTimeout = setTimeout(() => {
           this.disableDebounce = false;
