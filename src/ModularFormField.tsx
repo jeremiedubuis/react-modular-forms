@@ -60,7 +60,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   const name = computedName
     ? computedName
     : type !== ModularFieldType.Submit
-    ? computedName || id
+    ? computedName || _id
     : computedName;
 
   useEffect(() => {
