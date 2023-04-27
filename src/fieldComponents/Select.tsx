@@ -16,6 +16,7 @@ export const Select: React.FC<React.HTMLProps<HTMLSelectElement> & FieldComponen
   readOnly,
   formId,
   errorHtmlElement,
+  setValue,
   ...intrinsic
 }) => {
   const sharedProps = {

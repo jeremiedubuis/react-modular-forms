@@ -66,7 +66,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   useEffect(() => {
     if (!formId || registeredTypes[type]?.isStatic) return;
     const form = FormStore.getForm(formId);
-    if (name) {
+    if (_name) {
       form.registerField(
         id,
         type,

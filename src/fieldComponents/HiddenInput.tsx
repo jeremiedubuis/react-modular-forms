@@ -15,6 +15,7 @@ export const HiddenInput: React.FC<React.HTMLProps<HTMLInputElement> & FieldComp
   children,
   formId,
   errorHtmlElement,
+  setValue,
   ...intrinsic
 }) => {
   const sharedProps = {

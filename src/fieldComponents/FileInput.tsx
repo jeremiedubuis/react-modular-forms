@@ -15,6 +15,7 @@ export const FileInput: React.FC<React.HTMLProps<HTMLInputElement> & FieldCompon
   children,
   formId,
   errorHtmlElement,
+  setValue,
   ...intrinsic
 }) => {
   const sharedProps = {
