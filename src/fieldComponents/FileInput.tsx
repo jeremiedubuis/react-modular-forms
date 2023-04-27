@@ -26,6 +26,7 @@ export const FileInput: React.FC<React.HTMLProps<HTMLInputElement> & FieldCompon
     'aria-invalid': !!errors,
     'aria-required': validation?.required,
     disabled,
+    setValue,
     ...intrinsic
   };
 
