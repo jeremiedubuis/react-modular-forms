@@ -30,6 +30,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   errorMessages,
   value: _value = '',
   coerceType,
+  componentRef: _componentRef,
   checked,
   errorHtmlElement,
   hideErrors,
@@ -41,7 +42,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   const [errors, setErrors] = useState<(FieldError | string)[]>([]);
   const [success, setSuccess] = useState(false);
   const [value, setValue] = useState(_value);
-  const componentRef = useRef();
+  const componentRef = _componentRef || useRef();
   const setComponentRef = useCallback((node) => {
     if (node) componentRef.current = node;
   }, []);

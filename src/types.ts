@@ -1,5 +1,5 @@
 import type React from 'react';
-import type { RefObject } from 'react';
+import type { RefObject, MutableRefObject } from 'react';
 import { FieldError, ModularFieldType } from './enums';
 import { registeredTypes } from './config';
 
@@ -91,6 +91,7 @@ export type ModularFormFieldProps = {
   errorHtmlElement?: string | HTMLElement;
   hideErrors?: boolean;
   onErrorChange?: (errors: (FieldError | string)[]) => void;
+  componentRef?: MutableRefObject<any>;
   [intrinsicAttribute: string]: any;
 } & ({ id: string } | { id?: string; name: string | (string | number)[]; formId: string });
 
