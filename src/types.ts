@@ -88,7 +88,7 @@ export type ModularFormFieldProps = {
   validation?: ValidationType;
   errorMessages?: Partial<ErrorMessages>;
   coerceType?: CoerceType;
-  errorHtmlElement?: string | HTMLElement;
+  errorHtmlElement?: string | HTMLElement | null;
   hideErrors?: boolean;
   onErrorChange?: (errors: (FieldError | string)[]) => void;
   componentRef?: MutableRefObject<any>;
