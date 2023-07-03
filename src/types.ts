@@ -97,8 +97,8 @@ export type ModularFormFieldProps = {
 
 export type FieldComponentProps = {
   onChange?: (e: unknown, ...any: any[]) => void;
-  onBlur?: (e: React.SyntheticEvent) => void;
-  onFocus?: (e: React.SyntheticEvent) => void;
+  onBlur?: (e?: unknown) => void;
+  onFocus?: (e?: unknown) => void;
   errors: (FieldError | string)[];
   validation?: ValidationType;
   componentRef: React.MutableRefObject<any>;
