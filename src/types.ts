@@ -1,4 +1,4 @@
-import type React from 'react';
+import React, { ReactNode } from 'react';
 import type { RefObject, MutableRefObject } from 'react';
 import { FieldError, ModularFieldType } from './enums';
 import { registeredTypes } from './config';
@@ -79,7 +79,7 @@ export type ModularFormFieldProps = {
   wrapperProps?: any;
   error?: string;
   formId?: string;
-  label?: string;
+  label?: ReactNode;
   name?: string | (string | number)[];
   type: keyof typeof registeredTypes;
   onChange?: (e: any, ...any: any[]) => void;
