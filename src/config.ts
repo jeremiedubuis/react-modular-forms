@@ -55,6 +55,7 @@ export const registeredTypes: { [type: string]: ComponentOptions } = {
   },
   [ModularFieldType.Color]: regularInputType,
   [ModularFieldType.Date]: regularInputType,
+  [ModularFieldType.DateTimeLocal]: regularInputType,
   [ModularFieldType.Email]: regularInputType,
   [ModularFieldType.File]: {
     Component: FileInput,
