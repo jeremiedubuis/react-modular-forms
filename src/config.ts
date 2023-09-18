@@ -88,6 +88,7 @@ export const registeredTypes: { [type: string]: ComponentOptions } = {
     ...regularInputType,
     Component: Textarea
   },
+  [ModularFieldType.Time]: regularInputType,
   [ModularFieldType.Url]: regularInputType
 };
 
