@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import {
   ModularFieldType,
   ModularForm,
@@ -7,9 +7,16 @@ import {
   registerType,
   FieldComponentProps,
   config
-} from '../src';
+} from './lib';
 
 config.sendEmptyStringsAs = undefined;
+
+registerType('custom-field', {
+  Component: ({ componentRef, onChange, onBlur, onFocus }) => (
+    <input type="text" onChange={onChange} onBlur={onBlur} onFocus={onFocus} ref={componentRef} />
+  ),
+  getValue: (ref) => ref.current.value
+});
 
 registerType('address-fields', {
   Component: ({
@@ -51,13 +58,22 @@ registerType('address-fields', {
           validation={{ required: true }}
           errorHtmlElement={errorHtmlElement}
         />
+        <ModularFormField
+          formId={formId}
+          type="custom-field"
+          name={`${prefix}custom`}
+          label="Custom"
+          onChange={(e, v) => console.log(e, v)}
+          validation={{ required: true }}
+          errorHtmlElement={errorHtmlElement}
+        />
       </>
     );
   },
   isStatic: true
 });
 
-ReactDOM.render(
+createRoot(document.getElementById('app')).render(
   <React.StrictMode>
     <ModularForm
       id="form"
@@ -167,6 +183,5 @@ ReactDOM.render(
         <div id="address-errors"></div>
       </div>
     </ModularForm>
-  </React.StrictMode>,
-  document.getElementById('app')
+  </React.StrictMode>
 );
