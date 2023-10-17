@@ -129,6 +129,10 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
         onBlur?.(e);
       }
     };
+  } else {
+    sharedProps.onChange = onChange;
+    sharedProps.onFocus = onFocus;
+    sharedProps.onBlur = onBlur;
   }
 
   const Component = registeredTypes[type].Component;

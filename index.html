@@ -1,13 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/src/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+    <meta charset="utf-8">
+    <title>react-modulr-form</title>
+
+    <style>
+        .modular-form-field {
+            display: block;
+            max-width: 400px;
+        }
+
+        .modular-form-field:not(.is-checkbox, .is-radio) label {
+            display: block;
+        }
+
+        .is-checkbox, .is-radio {
+            display: flex;
+        }
+        .is-checkbox label, .is-radio label {
+            order: 2;
+        }
+
+        .has-error input {
+            border: 1px solid red;
+        }
+
+        .has-error label {
+            color: red;
+        }
+
+        .has-success label {
+            color: green;
+        }
+
+        .modular-form-error{
+            color: red;
+        }
+    </style>
+
+</head>
+<body>
+<div id="app"></div>
+
+<script src="src/main.tsx" type="module"></script>
+</body>
 </html>
