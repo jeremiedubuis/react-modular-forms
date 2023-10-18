@@ -10,6 +10,6 @@
     "declaration": true,
     "declarationDir": "./dist/declarations"
   },
-  "include": ["./src"],
+  "include": ["./src/lib/**/*.ts"],
   "exclude": ["./dist"]
 }
