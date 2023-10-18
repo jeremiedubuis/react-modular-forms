@@ -7,7 +7,7 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, 'src/lib/index.ts'),
       name: 'react-modular-form',
-      fileName: (format) => `react-modular-form.${format}.js`
+      fileName: (format) => `react-modular-forms.${format}.js`
     },
     rollupOptions: {
       external: ['react', 'react-dom'],
