@@ -3,6 +3,7 @@
     "jsx": "react",
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "lib": ["esnext", "dom"],
     "allowSyntheticDefaultImports": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

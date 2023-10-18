@@ -16,7 +16,7 @@
   "types": "dist/declarations/index.d.ts",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && tsc --emitDeclarationOnly",
     "watch": "vitest",
     "prepublishOnly": "npm run build"
   },
