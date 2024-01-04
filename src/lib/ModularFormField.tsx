@@ -61,8 +61,8 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   const name = computedName
     ? computedName
     : type !== ModularFieldType.Submit
-    ? computedName || _id
-    : computedName;
+      ? computedName || _id
+      : computedName;
 
   useEffect(() => {
     if (!formId || registeredTypes[type]?.isStatic) return;
@@ -103,36 +103,29 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     checked: isChecked,
     formId,
     errorHtmlElement,
+    onFocus: (e: any) => {
+      setIsFocused(true);
+      onFocus?.(e);
+    },
+    onBlur: (e: any) => {
+      setIsFocused(false);
+      const validateOnBlur =
+        typeof validation?.validateOnBlur !== 'undefined'
+          ? validation.validateOnBlur
+          : config.validateOnBlur;
+      if (formId && validateOnBlur) FormStore.getForm(formId).validateField(id);
+      onBlur?.(e);
+    },
     ...intrinsic
   };
 
   if (!registeredTypes[type]?.isStatic) {
-    sharedProps = {
-      ...sharedProps,
-      onChange: (e: any, ...args: any[]) => {
-        if (registeredTypes[type].checkable)
-          setIsChecked((e.currentTarget as HTMLInputElement).checked);
-        else setValue(registeredTypes[type].getValue(componentRef));
-        onChange?.(e, ...args);
-      },
-      onFocus: (e: any) => {
-        setIsFocused(true);
-        onFocus?.(e);
-      },
-      onBlur: (e: any) => {
-        setIsFocused(false);
-        const validateOnBlur =
-          typeof validation?.validateOnBlur !== 'undefined'
-            ? validation.validateOnBlur
-            : config.validateOnBlur;
-        if (formId && validateOnBlur) FormStore.getForm(formId).validateField(id);
-        onBlur?.(e);
-      }
+    sharedProps.onChange = (e: any, ...args: any[]) => {
+      if (registeredTypes[type].checkable)
+        setIsChecked((e.currentTarget as HTMLInputElement).checked);
+      else setValue(registeredTypes[type].getValue(componentRef));
+      onChange?.(e, ...args);
     };
-  } else {
-    sharedProps.onChange = onChange;
-    sharedProps.onFocus = onFocus;
-    sharedProps.onBlur = onBlur;
   }
 
   const Component = registeredTypes[type].Component;
