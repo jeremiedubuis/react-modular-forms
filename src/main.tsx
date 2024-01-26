@@ -170,6 +170,23 @@ createRoot(document.getElementById('app')).render(
         errorHtmlElement={'#address-errors'}
       />
       <ModularFormField formId="form" id="optional" type="text" name="optional" label="optional" />
+
+      <ModularFormField
+        formId="form"
+        type={ModularFieldType.Radio}
+        id="radio-a"
+        name="radio"
+        label="A"
+        value="a"
+      />
+      <ModularFormField
+        formId="form"
+        type={ModularFieldType.Radio}
+        id="radio-b"
+        name="radio"
+        label="B"
+        value="b"
+      />
       <ModularFormField
         formId="form"
         type={ModularFieldType.Submit}

@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import type { RefObject, MutableRefObject } from 'react';
 import { FieldError, ModularFieldType } from './enums';
 import { registeredTypes } from './config';
+import { FormField } from './FormField';
 
 export type ElementType = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
@@ -47,7 +48,8 @@ export type ModularFormConfiguration = {
   displayMultipleErrors: boolean;
   handleSameNameFieldValues: (
     name: string | (string | number)[],
-    values: any[]
+    values: any[],
+    fields: FormField[]
   ) => {
     [key: string]: any;
   };
@@ -106,7 +108,7 @@ export type FieldComponentProps = {
   [key: string]: any;
 };
 
-export type SameNameFieldValuesHandler = (name: string, values: any[]) => { [name: string]: any };
+export type SameNameFieldValuesHandler = (name: string, values: any[], types: FormField[]) => { [name: string]: any };
 
 export type ComponentOptions = {
   Component: React.ComponentType<FieldComponentProps>;

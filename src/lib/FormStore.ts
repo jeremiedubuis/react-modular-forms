@@ -130,7 +130,7 @@ export class FormStore {
   getFieldsIngroup = (group) => this.fields.filter((f) => f.validation?.group === group);
 
   getValues = (): FormValues => {
-    const grouped = {};
+    const grouped: Record<string, FormField[]> = {};
     const singleFields: FormField[] = [];
 
     this.fields.forEach((f) => {
@@ -153,7 +153,8 @@ export class FormStore {
         ...values,
         ...this.handleSameNameFieldValues(
           name,
-          grouped[name].map((f) => f.getValue())
+          grouped[name].map((f) => f.getValue()),
+          grouped[name]
         )
       };
     });

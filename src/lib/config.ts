@@ -7,6 +7,7 @@ import { ComponentOptions, ModularFormConfiguration } from './types';
 import { HiddenInput } from './fieldComponents/HiddenInput';
 import { FileInput } from './fieldComponents/FileInput';
 import { arrayToAccessor } from './accessorsHelpers';
+import { FormField } from './FormField';
 
 export const config: ModularFormConfiguration = {
   defaultFormMethod: 'POST',
@@ -14,7 +15,12 @@ export const config: ModularFormConfiguration = {
   errorClassName: 'modular-form-error',
   fieldClassName: 'modular-form-field',
   greedyValidation: true,
-  handleSameNameFieldValues: (name, values: any[]) => {
+  handleSameNameFieldValues: (name, values: any[], fields: FormField[]) => {
+    if (fields.every(f => f.type === 'radio')) {
+      return {
+        [Array.isArray(name) ? arrayToAccessor(name) : name]: fields.find(f => f.componentRef.current?.checked)?.getValue()
+      };
+    }
     return {
       [Array.isArray(name) ? arrayToAccessor(name) : name]: values.filter(
         (v) => typeof v !== 'undefined' && v !== null
