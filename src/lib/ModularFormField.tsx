@@ -126,6 +126,8 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
       else setValue(registeredTypes[type].getValue(componentRef));
       onChange?.(e, ...args);
     };
+  } else {
+    sharedProps.onChange = onChange;
   }
 
   const Component = registeredTypes[type].Component;
