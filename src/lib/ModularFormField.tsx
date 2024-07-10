@@ -11,6 +11,7 @@ const cn = (...classes: (string | false | null | undefined)[]) =>
 
 export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   children,
+  innerClassName,
   className,
   disableOnInvalidForm,
   error: errorProp,
@@ -61,8 +62,8 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   const name = computedName
     ? computedName
     : type !== ModularFieldType.Submit
-      ? computedName || _id
-      : computedName;
+    ? computedName || _id
+    : computedName;
 
   useEffect(() => {
     if (!formId || registeredTypes[type]?.isStatic) return;
@@ -87,7 +88,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
 
   let sharedProps: any = {
     children,
-    className,
+    className: innerClassName,
     id,
     name,
     'aria-invalid': !!errors,

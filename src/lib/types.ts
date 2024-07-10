@@ -76,6 +76,7 @@ export type ModularFormProps = {
 export type CoerceType = 'int' | 'float' | 'string' | 'array';
 
 export type ModularFormFieldProps = {
+  innerClassName?: string;
   className?: string;
   disableOnInvalidForm?: boolean;
   wrapperProps?: any;
@@ -108,7 +109,11 @@ export type FieldComponentProps = {
   [key: string]: any;
 };
 
-export type SameNameFieldValuesHandler = (name: string, values: any[], types: FormField[]) => { [name: string]: any };
+export type SameNameFieldValuesHandler = (
+  name: string,
+  values: any[],
+  types: FormField[]
+) => { [name: string]: any };
 
 export type ComponentOptions = {
   Component: React.ComponentType<FieldComponentProps>;

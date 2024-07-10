@@ -24,6 +24,10 @@ const formId = 'my-form';
 The ModularFormField is used to render any form field element. It must have a `formId` prop to reference it's
 parent form and either a `name` or an `id` prop.
 
+If you need to pass a class to the input field or the inner component you can use the `innerClassName` prop.
+
+```TSX
+
 Every native HTML form field element should be supported out of the box.
 ```TSX
 const formId = 'my-form';
