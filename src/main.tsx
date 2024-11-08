@@ -145,6 +145,7 @@ createRoot(document.getElementById('app')).render(
         formId="form"
         type={ModularFieldType.Tel}
         id="tel2"
+        className={'test'}
         label="Tel 2"
         validation={{
           group: 'tel',
@@ -154,6 +155,7 @@ createRoot(document.getElementById('app')).render(
       <ModularFormField formId="form" type={ModularFieldType.File} id="file" label="File" />
       <ModularFormField
         formId="form"
+        className={'test'}
         type={ModularFieldType.File}
         id="files"
         multiple

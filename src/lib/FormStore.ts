@@ -46,6 +46,7 @@ export class FormStore {
     validation: ValidationType = {},
     setSuccess: Function,
     setErrors: Function,
+    setIsChecked: (checked: boolean) => void,
     disableOnInvalidForm?: boolean,
     coerceType?: CoerceType
   ) {
@@ -58,6 +59,7 @@ export class FormStore {
       validation,
       setSuccess,
       setErrors,
+      setIsChecked,
       disableOnInvalidForm,
       coerceType
     });
@@ -66,6 +68,8 @@ export class FormStore {
       this.fieldsToDisable.push(ff);
       this.disableFieldsIfFormInvalid();
     }
+
+    return ff;
   }
 
   unregisterField(id: string) {
@@ -212,5 +216,13 @@ export class FormStore {
         }, 150);
       }
     }
+  }
+
+  checkRadioField(fieldId: string) {
+    const field = this.getField(fieldId);
+    if (!field) return;
+    this.fields.forEach((f) => {
+      if (f.name === field.name) f.setIsChecked(f.id === fieldId);
+    });
   }
 }

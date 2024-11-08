@@ -15,6 +15,7 @@ interface IFormFieldOptions {
   validation?: ValidationType;
   setSuccess?: Function;
   setErrors?: Function;
+  setIsChecked: (checked: boolean) => void;
   disableOnInvalidForm?: boolean;
   coerceType?: CoerceType;
 }
@@ -28,6 +29,7 @@ export class FormField implements IFormFieldOptions {
   _setSuccess?: Function;
   _setErrors?: Function;
   _getValue: Function;
+  _setIsChecked: (checked: boolean) => void;
   disableOnInvalidForm?: boolean;
   coerceType?: CoerceType;
 
@@ -40,6 +42,7 @@ export class FormField implements IFormFieldOptions {
     this._setSuccess = payload.setSuccess;
     this._setErrors = payload.setErrors;
     this._getValue = payload.getValue;
+    this._setIsChecked = payload.setIsChecked;
     this.disableOnInvalidForm = payload.disableOnInvalidForm;
     this.coerceType = payload.coerceType;
   }
@@ -68,6 +71,10 @@ export class FormField implements IFormFieldOptions {
   setErrors(errors: (FieldError | string)[]) {
     this._setErrors?.(errors);
     this._setSuccess?.(errors.length === 0);
+  }
+
+  setIsChecked(checked: boolean) {
+    this._setIsChecked(checked);
   }
 
   isChecked() {

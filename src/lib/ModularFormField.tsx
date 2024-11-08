@@ -78,6 +78,7 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
         validation,
         setSuccess,
         setErrors,
+        setIsChecked,
         disableOnInvalidForm,
         coerceType
       );
@@ -122,9 +123,13 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
 
   if (!registeredTypes[type]?.isStatic) {
     sharedProps.onChange = (e: any, ...args: any[]) => {
-      if (registeredTypes[type].checkable)
-        setIsChecked((e.currentTarget as HTMLInputElement).checked);
-      else setValue(registeredTypes[type].getValue(componentRef));
+      if (registeredTypes[type].checkable) {
+        if (type === ModularFieldType.Radio) {
+          FormStore.getForm(formId).checkRadioField(id);
+        } else {
+          setIsChecked((e.currentTarget as HTMLInputElement).checked);
+        }
+      } else setValue(registeredTypes[type].getValue(componentRef));
       onChange?.(e, ...args);
     };
   } else {
