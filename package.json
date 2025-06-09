@@ -1,6 +1,6 @@
 {
   "name": "react-modular-forms",
-  "version": "1.1.0",
+  "version": "1.1.1-canary.0",
   "files": [
     "dist",
     "README.md"
