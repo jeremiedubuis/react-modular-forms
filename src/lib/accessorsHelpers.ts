@@ -4,13 +4,14 @@ const valueFromNextAccessor = (accessor: string) => {
 };
 
 const parseKey = (key, value, output) => {
-  const matches = key.match(/\.?[a-zA-Z0-9_ -]+|\[\d+]/g) as string[];
+  const matches = key.match(/\.?[\p{L}\p{N}\p{M}_ -@$£%µ!:;,|#]+|\[\d+\]/gu) as string[];
 
   let currentDepth = output;
   for (let i = 0, iLength = matches.length; i < iLength; i++) {
     let accessor: string | number;
     if (i === 0) {
-      if (!/[a-zA-Z0-9_ -]/.test(matches[0])) throw 'First accessor in chain must be string';
+      if (!/[\p{L}\p{N}\p{M}_ -@$£%µ!:;,|#]/gu.test(matches[0]))
+        throw 'First accessor in chain must be string';
       accessor = matches[0];
     } else {
       if (matches[i].startsWith('.')) accessor = matches[i].replace('.', '');
