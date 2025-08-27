@@ -108,7 +108,7 @@ createRoot(document.getElementById('app')).render(
         formId="form"
         type={ModularFieldType.Checkbox}
         id="checkbox-a"
-        name="blocks[0].checked2@special chars"
+        name="blocks[0].checked2@special chars/toto\tata"
         label="A"
         value="a"
         validation={{ group: 'cb' }}
