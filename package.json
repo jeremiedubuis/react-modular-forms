@@ -21,8 +21,8 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
-    "react": ">=18.0.2",
-    "react-dom": ">=18.0.2"
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.0.3",
