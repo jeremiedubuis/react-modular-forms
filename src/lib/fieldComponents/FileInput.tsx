@@ -1,29 +1,37 @@
 import React from 'react';
 import { FieldComponentProps } from '../types';
 
-export const FileInput: React.FC<React.HTMLProps<HTMLInputElement> & FieldComponentProps> = ({
+export const FileInput: React.FC<
+  FieldComponentProps<unknown, 'input', HTMLInputElement> &
+    Omit<
+      React.HTMLProps<HTMLInputElement>,
+      'value' | 'checked' | 'onChange' | 'onBlur' | 'onFocus' | 'defaultValue' | 'defaultChecked'
+    >
+> = ({
   type,
   disabled,
-  value,
+  value: _value,
   onBlur,
   onFocus,
   onChange,
   errors,
   validation,
   componentRef,
-  setComponentRef,
+  setComponentRef: _setComponentRef,
   children,
-  formId,
-  errorHtmlElement,
-  setValue,
+  formId: _formId,
+  errorHtmlElement: _errorHtmlElement,
+  setValue: _setValue,
   ...intrinsic
 }) => {
+  const inputRef = componentRef as React.RefObject<HTMLInputElement> | undefined;
+
   const sharedProps = {
-    ref: componentRef,
+    ref: inputRef,
     onChange,
     onFocus,
     onBlur,
-    'aria-invalid': !!errors,
+    'aria-invalid': errors.length > 0,
     'aria-required': validation?.required,
     disabled,
     ...intrinsic

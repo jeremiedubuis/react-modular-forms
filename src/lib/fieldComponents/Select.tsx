@@ -1,8 +1,14 @@
 import React from 'react';
 import { FieldComponentProps } from '../types';
 
-export const Select: React.FC<React.HTMLProps<HTMLSelectElement> & FieldComponentProps> = ({
-  type,
+export const Select: React.FC<
+  FieldComponentProps<unknown, 'select', HTMLSelectElement> &
+    Omit<
+      React.HTMLProps<HTMLSelectElement>,
+      'value' | 'checked' | 'onChange' | 'onBlur' | 'onFocus' | 'defaultValue' | 'defaultChecked'
+    >
+> = ({
+  type: _type,
   disabled,
   value,
   onBlur,
@@ -11,27 +17,35 @@ export const Select: React.FC<React.HTMLProps<HTMLSelectElement> & FieldComponen
   errors,
   validation,
   componentRef,
-  setComponentRef,
+  setComponentRef: _setComponentRef,
   children,
   readOnly,
-  formId,
-  errorHtmlElement,
-  setValue,
+  multiple,
+  formId: _formId,
+  errorHtmlElement: _errorHtmlElement,
+  setValue: _setValue,
   ...intrinsic
 }) => {
   const sharedProps = {
-    ref: componentRef,
+    ref: componentRef as React.Ref<HTMLSelectElement>,
     onChange,
     onFocus,
     onBlur,
-    'aria-invalid': !!errors,
+    'aria-invalid': errors.length > 0,
     'aria-required': validation?.required,
     disabled,
-    value,
+    multiple,
+    value: (value ?? (multiple ? [] : '')) as any,
     ...intrinsic
   };
   const c = readOnly
-    ? React.Children.toArray(children).filter(({ props }: any) => props.value === value)
+    ? React.Children.toArray(children).filter((child) => {
+        if (!React.isValidElement(child)) return false;
+        const optionValue = (child.props as { value?: unknown }).value;
+        return multiple && Array.isArray(value)
+          ? value.includes(optionValue)
+          : optionValue === value;
+      })
     : children;
 
   return <select {...sharedProps}>{c}</select>;

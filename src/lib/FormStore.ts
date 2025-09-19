@@ -4,58 +4,95 @@ import { FieldError, ModularFieldType } from './enums';
 import { FormField } from './FormField';
 import { config, registeredTypes } from './config';
 import { RefObject } from 'react';
-import { accessorsToObject } from './accessorsHelpers';
+import { accessorsToObject, validateAccessor } from './accessorsHelpers';
 
-const forms: FormStore[] = [];
+export class FormStore<TValues extends FormValues = FormValues> {
+  private static forms: Map<string, FormStore<FormValues>> = new Map();
 
-export class FormStore {
-  static getForm(id: string) {
-    return forms.find((f) => f.id === id) || forms[forms.push(new FormStore(id)) - 1];
+  static getForm<TValues extends FormValues = FormValues>(id: string) {
+    let form = this.forms.get(id) as FormStore<TValues> | undefined;
+    if (!form) {
+      form = new FormStore<TValues>(id);
+      this.forms.set(id, form);
+    }
+    return form;
   }
 
   private id: string;
-  private handleSameNameFieldValues: SameNameFieldValuesHandler;
-  private fields: FormField[] = [];
-  private fieldsToDisable: FormField[] = [];
+  private handleSameNameFieldValues: SameNameFieldValuesHandler<TValues>;
+  private fields: FormField<any, any, any, any, any>[] = [];
+  private fieldsToDisable: FormField<any, any, any, any, any>[] = [];
+  private pendingDisableCheck?: object;
 
-  private disableTimeout: any;
-  private disableDebounce = false;
   private parseAccessors = false;
+  private warnedAccessors = new Set<string>();
 
-  set(handleSameNameFieldValues?: SameNameFieldValuesHandler, parseAccessors?: boolean) {
-    if (handleSameNameFieldValues) this.handleSameNameFieldValues = handleSameNameFieldValues;
+  set(handleSameNameFieldValues?: SameNameFieldValuesHandler<TValues>, parseAccessors?: boolean) {
+    this.handleSameNameFieldValues =
+      handleSameNameFieldValues ||
+      (config.handleSameNameFieldValues as SameNameFieldValuesHandler<TValues>);
+    const wasParsingAccessors = this.parseAccessors;
     this.parseAccessors = !!parseAccessors;
+    if (this.parseAccessors && !wasParsingAccessors) {
+      this.fields.forEach((field) => this.warnInvalidAccessor(field.name));
+    }
   }
 
   constructor(
     id: string,
-    handleSameNameFieldValues?: SameNameFieldValuesHandler,
+    handleSameNameFieldValues?: SameNameFieldValuesHandler<TValues>,
     parseAccessors?: boolean
   ) {
     this.id = id;
-    this.handleSameNameFieldValues = handleSameNameFieldValues || config.handleSameNameFieldValues;
+    this.handleSameNameFieldValues =
+      (handleSameNameFieldValues as SameNameFieldValuesHandler<TValues>) ||
+      (config.handleSameNameFieldValues as SameNameFieldValuesHandler<TValues>);
     this.parseAccessors = !!parseAccessors;
   }
 
-  registerField(
+  private warnInvalidAccessor(name: string) {
+    if (
+      process.env.NODE_ENV === 'production' ||
+      !this.parseAccessors ||
+      this.warnedAccessors.has(name)
+    )
+      return;
+    try {
+      validateAccessor(name);
+    } catch (error) {
+      this.warnedAccessors.add(name);
+      console.warn(
+        `[react-modular-forms] Form "${this.id}": ${String(error)}. ` +
+          'Use supported accessor paths (for example, items[0].name), or disable parseAccessors for literal names. Serialization will throw for this name.'
+      );
+    }
+  }
+
+  registerField<
+    TRaw = unknown,
+    TEl = HTMLElement,
+    TRef = TEl,
+    TC extends CoerceType | undefined = CoerceType | undefined
+  >(
     id: string,
     type: keyof typeof registeredTypes,
     name: string,
-    componentRef,
-    getValue: (ref: RefObject<any>) => any,
+    componentRef: RefObject<TRef>,
+    getValue: (ref: RefObject<TRef>) => TRaw,
     validation: ValidationType = {},
-    setSuccess: Function,
-    setErrors: Function,
+    setSuccess: (success: boolean) => void,
+    setErrors: (errors: (FieldError | string)[]) => void,
     setIsChecked: (checked: boolean) => void,
     disableOnInvalidForm?: boolean,
-    coerceType?: CoerceType
+    coerceType?: TC
   ) {
-    const ff = new FormField({
+    this.warnInvalidAccessor(name);
+    const ff = new FormField<TRaw, TEl, TRef, TC>({
       id,
       type,
       name,
       componentRef,
-      getValue,
+      rawGetValue: getValue,
       validation,
       setSuccess,
       setErrors,
@@ -72,11 +109,34 @@ export class FormStore {
     return ff;
   }
 
+  updateField(
+    id: string,
+    options: Pick<FormField, 'validation' | 'coerceType' | 'disableOnInvalidForm'>,
+    deferDisableCheck = false
+  ) {
+    const field = this.getField(id);
+    if (!field) return;
+    Object.assign(field, options);
+    const index = this.fieldsToDisable.indexOf(field);
+    if (field.disableOnInvalidForm && index === -1) this.fieldsToDisable.push(field);
+    if (!field.disableOnInvalidForm && index !== -1) this.fieldsToDisable.splice(index, 1);
+    if (deferDisableCheck) this.scheduleDisableCheck();
+    else this.disableFieldsIfFormInvalid();
+    return field;
+  }
+
   unregisterField(id: string) {
     const index = this.fields.findIndex((f) => f.id === id);
-    if (this.fields[index].disableOnInvalidForm)
-      this.fieldsToDisable.splice(this.fieldsToDisable.indexOf(this.fields[index]), 1);
-    if (index > -1) this.fields.splice(index, 1);
+    if (index === -1) return;
+
+    const field = this.fields[index];
+    if (field?.disableOnInvalidForm) {
+      const toDisableIndex = this.fieldsToDisable.indexOf(field);
+      if (toDisableIndex > -1) this.fieldsToDisable.splice(toDisableIndex, 1);
+    }
+
+    this.fields.splice(index, 1);
+    this.scheduleDisableCheck();
   }
 
   getFieldErrors(fieldId: string) {
@@ -90,7 +150,7 @@ export class FormStore {
 
       let valid = 0;
       fieldsInGroup.forEach((f) => {
-        let singleFieldErrors = this.getSingleFieldErrors(f, true);
+        const singleFieldErrors = this.getSingleFieldErrors(f, true);
         if (singleFieldErrors[1].length === 0) valid++;
       });
 
@@ -101,41 +161,47 @@ export class FormStore {
   }
 
   getSingleFieldErrors(
-    field: FormField,
+    field: FormField<any, any, any, any, any>,
     treatAsRequired?: boolean
-  ): [ValidationType, (FieldError | string)[]] {
+  ): [ValidationType | undefined, (FieldError | string)[]] {
     let value;
+    let rawValue;
     let validation;
 
     if (
       ![ModularFieldType.Checkbox, ModularFieldType.Radio].includes(field.type as ModularFieldType)
     ) {
       validation = field.validation;
-      value = field.getValue();
+      ({ value, rawValue } = field.getValueWithRaw());
     } else {
       const fields = this.fields.filter((f) => f.name === field.name);
       validation = fields[0]?.validation || {};
       const checked = fields.filter((f) => f.isChecked());
       if (field.type === ModularFieldType.Radio) {
-        value = checked[0]?.getValue();
+        ({ value, rawValue } = checked[0]?.getValueWithRaw() ?? {});
       } else {
-        value = checked.map((f) => f.getValue());
-        if (fields.length === 1 && !config.handleSingleCheckboxAsArray) value = value[0];
+        const values = checked.map((f) => f.getValueWithRaw());
+        value = values.map((entry) => entry.value);
+        rawValue = values.map((entry) => entry.rawValue);
+        if (fields.length === 1 && !config.handleSingleCheckboxAsArray) {
+          value = value[0];
+          rawValue = rawValue[0];
+        }
       }
     }
 
     if (treatAsRequired) validation = { ...validation, required: true };
 
-    return [validation, FormField.getErrors(validation, value)];
+    return [validation, FormField.getErrors(validation, value, rawValue)];
   }
 
   getField = (fieldId: string) => this.fields.find(({ id }) => id === fieldId);
 
-  getFieldsIngroup = (group) => this.fields.filter((f) => f.validation?.group === group);
+  getFieldsIngroup = (group: string) => this.fields.filter((f) => f.validation?.group === group);
 
-  getValues = (): FormValues => {
-    const grouped: Record<string, FormField[]> = {};
-    const singleFields: FormField[] = [];
+  getValues = (): TValues => {
+    const grouped: Record<string, FormField<any, any, any, any, any>[]> = Object.create(null);
+    const singleFields: FormField<any, any, any, any, any>[] = [];
 
     this.fields.forEach((f) => {
       if (grouped[f.name]) return;
@@ -147,10 +213,9 @@ export class FormStore {
       singleFields.push(f);
     });
 
-    let values = singleFields.reduce((acc: FormValues, curr: FormField) => {
-      acc[curr.name] = curr.getValue();
-      return acc;
-    }, {} as FormValues);
+    let values: Record<string, unknown> = Object.fromEntries(
+      singleFields.map((field) => [field.name, field.getValue()])
+    );
 
     Object.keys(grouped).forEach((name) => {
       values = {
@@ -167,16 +232,29 @@ export class FormStore {
     }
 
     if (config.sendEmptyStringsAs !== '') {
-      for (let key in values) {
-        if (values[key] === '') values[key] = config.sendEmptyStringsAs;
-      }
+      const isPlainObject = (o: unknown): o is Record<string, unknown> => {
+        if (o === null || typeof o !== 'object') return false;
+        const proto = Object.getPrototypeOf(o);
+        return proto === Object.prototype || proto === null;
+      };
+
+      const mapEmpty = (val: unknown): unknown => {
+        if (val === '') return config.sendEmptyStringsAs;
+        if (Array.isArray(val)) return val.map(mapEmpty);
+        // Only recurse into plain objects. Preserve instances like Date, File, Map, etc.
+        if (isPlainObject(val)) {
+          return Object.fromEntries(Object.entries(val).map(([k, v]) => [k, mapEmpty(v)]));
+        }
+        return val;
+      };
+      values = mapEmpty(values) as typeof values;
     }
 
-    return values;
+    return values as TValues;
   };
 
   getErrors(silent = true) {
-    let errors: [string, (string | FieldError)[]][] = [];
+    const errors: [string, (string | FieldError)[]][] = [];
 
     for (let i = 0, iLength = this.fields.length; i < iLength; i++) {
       const e = this.getFieldErrors(this.fields[i].id);
@@ -198,23 +276,26 @@ export class FormStore {
     field.setErrors(errors);
     if (!ignoreGroup && field.validation?.group) {
       const fields = this.getFieldsIngroup(field.validation.group).filter((f) => f.id !== fieldId);
-      fields.forEach((f) => this.validateField(f.id, true));
+      // Refresh group errors before checking the whole form once below.
+      fields.forEach((f) => f.setErrors(this.getFieldErrors(f.id)));
     }
     this.disableFieldsIfFormInvalid();
   }
 
+  private scheduleDisableCheck() {
+    if (!this.fieldsToDisable.length || this.pendingDisableCheck) return;
+    const pending = (this.pendingDisableCheck = {});
+    // Coalesce React field effects, while explicit validation remains synchronous.
+    queueMicrotask(() => {
+      if (this.pendingDisableCheck === pending) this.disableFieldsIfFormInvalid();
+    });
+  }
+
   disableFieldsIfFormInvalid(errors?: [string, (string | FieldError)[]][]) {
+    this.pendingDisableCheck = undefined;
     if (this.fieldsToDisable.length) {
-      clearTimeout(this.disableTimeout);
-      if (!this.disableDebounce) {
-        this.disableDebounce = true;
-        const formErrors = typeof errors !== undefined ? errors : this.getErrors(true);
-        const disabled = typeof formErrors !== 'undefined' && formErrors.length > 1;
-        this.fieldsToDisable.forEach((f) => f.setDisabled(disabled));
-        this.disableTimeout = setTimeout(() => {
-          this.disableDebounce = false;
-        }, 150);
-      }
+      const formErrors = errors ?? this.getErrors(true);
+      this.fieldsToDisable.forEach((field) => field.setDisabled(formErrors.length > 0));
     }
   }
 
@@ -224,5 +305,14 @@ export class FormStore {
     this.fields.forEach((f) => {
       if (f.name === field.name) f.setIsChecked(f.id === fieldId);
     });
+  }
+
+  destroy() {
+    this.pendingDisableCheck = undefined;
+    this.fields.length = 0;
+    this.fieldsToDisable.length = 0;
+    this.warnedAccessors.clear();
+
+    FormStore.forms.delete(this.id);
   }
 }

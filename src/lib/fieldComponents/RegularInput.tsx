@@ -1,7 +1,7 @@
 import React from 'react';
 import { FieldComponentProps } from '../types';
 
-export const RegularInput: React.FC<React.HTMLProps<HTMLInputElement> & FieldComponentProps> = ({
+export const RegularInput = ({
   type,
   disabled,
   value,
@@ -11,24 +11,31 @@ export const RegularInput: React.FC<React.HTMLProps<HTMLInputElement> & FieldCom
   errors,
   validation,
   componentRef,
-  setComponentRef,
+  setComponentRef: _setComponentRef,
   children,
-  formId,
-  errorHtmlElement,
-  setValue,
+  formId: _formId,
+  errorHtmlElement: _errorHtmlElement,
+  setValue: _setValue,
   ...intrinsic
-}) => {
+}: FieldComponentProps<unknown, 'input', HTMLInputElement> &
+  Omit<
+    React.HTMLProps<HTMLInputElement>,
+    'value' | 'checked' | 'onChange' | 'onBlur' | 'onFocus' | 'defaultValue' | 'defaultChecked'
+  >) => {
   const sharedProps = {
-    ref: componentRef,
+    ref: componentRef as React.Ref<HTMLInputElement>,
     onChange,
     onFocus,
     onBlur,
-    'aria-invalid': !!errors,
+    'aria-invalid': errors.length > 0,
     'aria-required': validation?.required,
     disabled,
-    value,
     ...intrinsic
-  };
+  } as any;
+
+  if (value !== undefined) {
+    sharedProps.value = value ?? '';
+  }
 
   return (
     <>
