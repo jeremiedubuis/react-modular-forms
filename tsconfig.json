@@ -1,15 +1,19 @@
 {
   "compilerOptions": {
-    "jsx": "react",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "lib": ["esnext", "dom"],
+    "strict": true,
     "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationDir": "./dist/declarations",
+    "esModuleInterop": true,
+    "jsx": "react",
+    "lib": ["esnext", "dom"],
+    "moduleResolution": "node",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "declaration": true,
-    "declarationDir": "./dist/declarations"
+    "skipLibCheck": true,
+    "target": "es6",
+    "types": ["node", "vitest"]
   },
-  "include": ["./src/lib/**/*.ts"],
-  "exclude": ["./dist"]
+  "exclude": ["dist"],
+  "include": ["src/lib/**/*"]
 }

@@ -1,25 +1,33 @@
 import React from 'react';
 import { FieldComponentProps } from '../types';
 
-export const HiddenInput: React.FC<React.HTMLProps<HTMLInputElement> & FieldComponentProps> = ({
+export const HiddenInput: React.FC<
+  FieldComponentProps<unknown, 'input', HTMLInputElement> &
+    Omit<
+      React.HTMLProps<HTMLInputElement>,
+      'value' | 'checked' | 'onChange' | 'onBlur' | 'onFocus' | 'defaultValue' | 'defaultChecked'
+    >
+> = ({
   type,
   disabled,
   value,
-  onBlur,
-  onFocus,
+  onBlur: _onBlur,
+  onFocus: _onFocus,
   onChange,
-  errors,
-  validation,
+  errors: _errors,
+  validation: _validation,
   componentRef,
-  setComponentRef,
+  setComponentRef: _setComponentRef,
   children,
-  formId,
-  errorHtmlElement,
-  setValue,
+  formId: _formId,
+  errorHtmlElement: _errorHtmlElement,
+  setValue: _setValue,
   ...intrinsic
 }) => {
+  const inputRef = componentRef as React.Ref<HTMLInputElement> | undefined;
+
   const sharedProps = {
-    ref: componentRef,
+    ref: inputRef,
     onChange,
     disabled,
     value: JSON.stringify(value),

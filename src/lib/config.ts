@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+import type { ElementType, RefObject } from 'react';
 import { FieldError, ModularFieldType } from './enums';
 import { RegularInput } from './fieldComponents/RegularInput';
 import { Textarea } from './fieldComponents/Textarea';
@@ -14,17 +14,30 @@ export const config: ModularFormConfiguration = {
   displayMultipleErrors: true,
   errorClassName: 'modular-form-error',
   fieldClassName: 'modular-form-field',
+  labelClassName: undefined,
+  innerClassName: undefined,
   greedyValidation: true,
-  handleSameNameFieldValues: (name, values: any[], fields: FormField[]) => {
-    if (fields.every(f => f.type === 'radio')) {
-      return {
-        [Array.isArray(name) ? arrayToAccessor(name) : name]: fields.find(f => f.componentRef.current?.checked)?.getValue()
-      };
+  wrapField: undefined,
+  handleSameNameFieldValues: (name, values: unknown[], fields: FormField[]) => {
+    const accessorName = Array.isArray(name) ? arrayToAccessor(name) : name;
+    // All radios: return the single checked value (or undefined)
+    if (fields.every((f) => f.type === 'radio')) {
+      const checkedField = fields.find(
+        (f) => (f.componentRef.current as HTMLInputElement | null)?.checked
+      );
+      return { [accessorName]: checkedField?.getValue() };
     }
+    // All checkboxes: aggregate all checked values into an array (exclude unchecked / null)
+    if (fields.every((f) => f.type === 'checkbox')) {
+      const checkedValues = fields
+        .filter((f) => (f.componentRef.current as HTMLInputElement | null)?.checked)
+        .map((f) => f.getValue())
+        .filter((v) => typeof v !== 'undefined' && v !== null);
+      return { [accessorName]: checkedValues };
+    }
+    // Mixed types: retain previous behavior (filtered values array)
     return {
-      [Array.isArray(name) ? arrayToAccessor(name) : name]: values.filter(
-        (v) => typeof v !== 'undefined' && v !== null
-      )
+      [accessorName]: values.filter((v) => typeof v !== 'undefined' && v !== null)
     };
   },
   sendEmptyStringsAs: '',
@@ -36,25 +49,26 @@ export const config: ModularFormConfiguration = {
   }
 };
 
-const regularInputType = {
+const regularInputType: ComponentOptions<unknown, 'input', HTMLInputElement> = {
   Component: RegularInput,
   labelBefore: true,
-  getValue: (ref: RefObject<any>) => {
-    return ref.current.value;
+  getValue: (ref: RefObject<HTMLInputElement>) => {
+    return ref.current?.value;
   }
 };
 
-export const registeredTypes: { [type: string]: ComponentOptions } = {
+export const registeredTypes: { [type: string]: ComponentOptions<unknown, any, any> } = {
   [ModularFieldType.Checkbox]: {
     Component: RegularInput,
     labelBefore: false,
     checkable: true,
-    getValue: (ref: RefObject<any>) => {
-      return ref.current.checked
-        ? ref.current.getAttribute('value')
-          ? ref.current.value
+    getValue: (ref: RefObject<HTMLInputElement>) => {
+      const el = ref.current!;
+      return el.checked
+        ? el.getAttribute('value')
+          ? el.value
           : true
-        : ref.current.value
+        : el.dataset.rmfPropsValue
         ? null
         : false;
     }
@@ -66,14 +80,24 @@ export const registeredTypes: { [type: string]: ComponentOptions } = {
   [ModularFieldType.File]: {
     Component: FileInput,
     labelBefore: true,
-    getValue: (ref: RefObject<any>) => {
-      return ref.current.hasAttribute('multiple') ? [...ref.current.files] : ref.current.files[0];
+    getValue: (ref: RefObject<HTMLInputElement>) => {
+      const el = ref.current!;
+      return el.hasAttribute('multiple') ? Array.from(el.files || []) : el.files?.[0];
     }
   },
   [ModularFieldType.Hidden]: {
     Component: HiddenInput,
     getValue: (ref: RefObject<HTMLInputElement>) => {
-      return JSON.parse(ref.current.value);
+      const raw = ref.current?.value;
+      if (typeof raw === 'undefined') return null;
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[react-modular-forms] Failed to parse hidden input JSON value:', e, raw);
+        }
+        return null;
+      }
     }
   },
   [ModularFieldType.Number]: regularInputType,
@@ -99,9 +123,13 @@ export const registeredTypes: { [type: string]: ComponentOptions } = {
   [ModularFieldType.Url]: regularInputType
 };
 
-export const registeredTypeStrings: string[] = Object.values(ModularFieldType);
-export const registerType = (fieldType: string, componentOptions: ComponentOptions) => {
+export const registeredTypeStrings: string[] = Object.values(ModularFieldType) as string[];
+export const registerType = <TValue, TElement extends ElementType, TRef = TElement>(
+  fieldType: string,
+  componentOptions: ComponentOptions<TValue, TElement, TRef>
+) => {
   if (typeof componentOptions.labelBefore === 'undefined') componentOptions.labelBefore = true;
-  registeredTypes[fieldType] = componentOptions;
+  registeredTypes[fieldType] = componentOptions as ComponentOptions<unknown, any, any>;
+  if (registeredTypeStrings.includes(fieldType)) return;
   registeredTypeStrings.push(fieldType);
 };
