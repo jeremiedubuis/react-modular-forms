@@ -1,10 +1,10 @@
-import React, { ForwardedRef, useEffect } from "react";
-import { FormStore } from "./FormStore";
-import type { ModularFormProps } from "./types";
-import { config } from "./config";
+import React, { ForwardedRef, useEffect } from 'react';
+import { FormStore } from './FormStore';
+import type { ModularFormProps, FormValues } from './types';
+import { config } from './config';
 
-export const ModularForm: React.FC<ModularFormProps> = React.forwardRef(
-  (
+export const ModularForm = React.forwardRef(
+  <TValues extends FormValues = FormValues>(
     {
       children,
       id,
@@ -12,20 +12,25 @@ export const ModularForm: React.FC<ModularFormProps> = React.forwardRef(
       onSubmitError,
       handleSameNameFieldValues,
       parseAccessors,
+      wrapField: _wrapField,
       ...intrinsic
-    },
-    ref: ForwardedRef<FormStore>
+    }: ModularFormProps<TValues>,
+    ref: ForwardedRef<FormStore<TValues>>
   ) => {
     useEffect(() => {
       if (ref) {
-        const form = FormStore.getForm(id);
-        if (typeof ref === "function") ref(form);
+        const form = FormStore.getForm<TValues>(id);
+        if (typeof ref === 'function') ref(form);
         else ref.current = form;
       }
+
+      return () => {
+        FormStore.getForm<TValues>(id).destroy();
+      };
     }, []);
 
     useEffect(() => {
-      const form = FormStore.getForm(id);
+      const form = FormStore.getForm<TValues>(id);
       form.set(handleSameNameFieldValues, parseAccessors);
     }, [handleSameNameFieldValues, parseAccessors]);
     return (
@@ -34,7 +39,7 @@ export const ModularForm: React.FC<ModularFormProps> = React.forwardRef(
         method={config.defaultFormMethod}
         {...intrinsic}
         onSubmit={(e) => {
-          const form = FormStore.getForm(id);
+          const form = FormStore.getForm<TValues>(id);
           const errors = form.getErrors(false);
           if (!errors.length) {
             onSubmit?.(e, form.getValues());
@@ -49,3 +54,4 @@ export const ModularForm: React.FC<ModularFormProps> = React.forwardRef(
     );
   }
 );
+ModularForm.displayName = 'ModularForm';

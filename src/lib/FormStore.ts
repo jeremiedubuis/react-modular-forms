@@ -6,56 +6,68 @@ import { config, registeredTypes } from './config';
 import { RefObject } from 'react';
 import { accessorsToObject } from './accessorsHelpers';
 
-const forms: FormStore[] = [];
+export class FormStore<TValues extends FormValues = FormValues> {
+  private static forms: Map<string, FormStore<FormValues>> = new Map();
 
-export class FormStore {
-  static getForm(id: string) {
-    return forms.find((f) => f.id === id) || forms[forms.push(new FormStore(id)) - 1];
+  static getForm<TValues extends FormValues = FormValues>(id: string) {
+    let form = this.forms.get(id) as FormStore<TValues> | undefined;
+    if (!form) {
+      form = new FormStore<TValues>(id);
+      this.forms.set(id, form);
+    }
+    return form;
   }
 
   private id: string;
-  private handleSameNameFieldValues: SameNameFieldValuesHandler;
-  private fields: FormField[] = [];
-  private fieldsToDisable: FormField[] = [];
+  private handleSameNameFieldValues: SameNameFieldValuesHandler<TValues>;
+  private fields: FormField<any, any, any, any, any>[] = [];
+  private fieldsToDisable: FormField<any, any, any, any, any>[] = [];
 
-  private disableTimeout: any;
+  private disableTimeout: ReturnType<typeof setTimeout> | null = null;
   private disableDebounce = false;
   private parseAccessors = false;
 
-  set(handleSameNameFieldValues?: SameNameFieldValuesHandler, parseAccessors?: boolean) {
+  set(handleSameNameFieldValues?: SameNameFieldValuesHandler<TValues>, parseAccessors?: boolean) {
     if (handleSameNameFieldValues) this.handleSameNameFieldValues = handleSameNameFieldValues;
     this.parseAccessors = !!parseAccessors;
   }
 
   constructor(
     id: string,
-    handleSameNameFieldValues?: SameNameFieldValuesHandler,
+    handleSameNameFieldValues?: SameNameFieldValuesHandler<TValues>,
     parseAccessors?: boolean
   ) {
     this.id = id;
-    this.handleSameNameFieldValues = handleSameNameFieldValues || config.handleSameNameFieldValues;
+    this.handleSameNameFieldValues =
+      (handleSameNameFieldValues as SameNameFieldValuesHandler<TValues>) ||
+      (config.handleSameNameFieldValues as SameNameFieldValuesHandler<TValues>);
     this.parseAccessors = !!parseAccessors;
   }
 
-  registerField(
+  registerField<
+    TRaw = unknown,
+    TEl = HTMLElement,
+    TRef = TEl,
+    TC extends CoerceType | undefined = CoerceType | undefined
+  >(
     id: string,
     type: keyof typeof registeredTypes,
     name: string,
-    componentRef,
-    getValue: (ref: RefObject<any>) => any,
+    componentRef: RefObject<TRef>,
+    getValue: (ref: RefObject<TRef>) => TRaw,
     validation: ValidationType = {},
-    setSuccess: Function,
-    setErrors: Function,
+    setSuccess: (success: boolean) => void,
+    setErrors: (errors: (FieldError | string)[]) => void,
     setIsChecked: (checked: boolean) => void,
     disableOnInvalidForm?: boolean,
-    coerceType?: CoerceType
+    coerceType?: TC
   ) {
-    const ff = new FormField({
+    const ff = new FormField<TRaw, TEl, TRef, TC>({
       id,
       type,
       name,
       componentRef,
-      getValue,
+      rawGetValue: getValue,
       validation,
       setSuccess,
       setErrors,
@@ -74,9 +86,15 @@ export class FormStore {
 
   unregisterField(id: string) {
     const index = this.fields.findIndex((f) => f.id === id);
-    if (this.fields[index].disableOnInvalidForm)
-      this.fieldsToDisable.splice(this.fieldsToDisable.indexOf(this.fields[index]), 1);
-    if (index > -1) this.fields.splice(index, 1);
+    if (index === -1) return;
+
+    const field = this.fields[index];
+    if (field?.disableOnInvalidForm) {
+      const toDisableIndex = this.fieldsToDisable.indexOf(field);
+      if (toDisableIndex > -1) this.fieldsToDisable.splice(toDisableIndex, 1);
+    }
+
+    this.fields.splice(index, 1);
   }
 
   getFieldErrors(fieldId: string) {
@@ -90,7 +108,7 @@ export class FormStore {
 
       let valid = 0;
       fieldsInGroup.forEach((f) => {
-        let singleFieldErrors = this.getSingleFieldErrors(f, true);
+        const singleFieldErrors = this.getSingleFieldErrors(f, true);
         if (singleFieldErrors[1].length === 0) valid++;
       });
 
@@ -101,9 +119,9 @@ export class FormStore {
   }
 
   getSingleFieldErrors(
-    field: FormField,
+    field: FormField<any, any, any, any, any>,
     treatAsRequired?: boolean
-  ): [ValidationType, (FieldError | string)[]] {
+  ): [ValidationType | undefined, (FieldError | string)[]] {
     let value;
     let validation;
 
@@ -131,11 +149,11 @@ export class FormStore {
 
   getField = (fieldId: string) => this.fields.find(({ id }) => id === fieldId);
 
-  getFieldsIngroup = (group) => this.fields.filter((f) => f.validation?.group === group);
+  getFieldsIngroup = (group: string) => this.fields.filter((f) => f.validation?.group === group);
 
-  getValues = (): FormValues => {
-    const grouped: Record<string, FormField[]> = {};
-    const singleFields: FormField[] = [];
+  getValues = (): TValues => {
+    const grouped: Record<string, FormField<any, any, any, any, any>[]> = {};
+    const singleFields: FormField<any, any, any, any, any>[] = [];
 
     this.fields.forEach((f) => {
       if (grouped[f.name]) return;
@@ -147,10 +165,13 @@ export class FormStore {
       singleFields.push(f);
     });
 
-    let values = singleFields.reduce((acc: FormValues, curr: FormField) => {
-      acc[curr.name] = curr.getValue();
-      return acc;
-    }, {} as FormValues);
+    let values = singleFields.reduce(
+      (acc: Record<string, unknown>, curr: FormField<any, any, any, any, any>) => {
+        acc[curr.name] = curr.getValue();
+        return acc;
+      },
+      {} as Record<string, unknown>
+    );
 
     Object.keys(grouped).forEach((name) => {
       values = {
@@ -167,16 +188,33 @@ export class FormStore {
     }
 
     if (config.sendEmptyStringsAs !== '') {
-      for (let key in values) {
-        if (values[key] === '') values[key] = config.sendEmptyStringsAs;
-      }
+      const isPlainObject = (o: unknown): o is Record<string, unknown> => {
+        if (o === null || typeof o !== 'object') return false;
+        const proto = Object.getPrototypeOf(o);
+        return proto === Object.prototype || proto === null;
+      };
+
+      const mapEmpty = (val: unknown): unknown => {
+        if (val === '') return config.sendEmptyStringsAs;
+        if (Array.isArray(val)) return val.map(mapEmpty);
+        // Only recurse into plain objects. Preserve instances like Date, File, Map, etc.
+        if (isPlainObject(val)) {
+          const out: Record<string, unknown> = {};
+          for (const [k, v] of Object.entries(val)) {
+            out[k] = mapEmpty(v);
+          }
+          return out;
+        }
+        return val;
+      };
+      values = mapEmpty(values) as typeof values;
     }
 
-    return values;
+    return values as TValues;
   };
 
   getErrors(silent = true) {
-    let errors: [string, (string | FieldError)[]][] = [];
+    const errors: [string, (string | FieldError)[]][] = [];
 
     for (let i = 0, iLength = this.fields.length; i < iLength; i++) {
       const e = this.getFieldErrors(this.fields[i].id);
@@ -205,11 +243,11 @@ export class FormStore {
 
   disableFieldsIfFormInvalid(errors?: [string, (string | FieldError)[]][]) {
     if (this.fieldsToDisable.length) {
-      clearTimeout(this.disableTimeout);
+      if (this.disableTimeout) clearTimeout(this.disableTimeout);
       if (!this.disableDebounce) {
         this.disableDebounce = true;
-        const formErrors = typeof errors !== undefined ? errors : this.getErrors(true);
-        const disabled = typeof formErrors !== 'undefined' && formErrors.length > 1;
+        const formErrors = typeof errors !== 'undefined' ? errors : this.getErrors(true);
+        const disabled = formErrors.length > 0;
         this.fieldsToDisable.forEach((f) => f.setDisabled(disabled));
         this.disableTimeout = setTimeout(() => {
           this.disableDebounce = false;
@@ -224,5 +262,13 @@ export class FormStore {
     this.fields.forEach((f) => {
       if (f.name === field.name) f.setIsChecked(f.id === fieldId);
     });
+  }
+
+  destroy() {
+    if (this.disableTimeout) clearTimeout(this.disableTimeout);
+    this.fields.length = 0;
+    this.fieldsToDisable.length = 0;
+
+    FormStore.forms.delete(this.id);
   }
 }

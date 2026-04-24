@@ -1,39 +1,50 @@
 import { FieldError, ModularFieldType } from './enums';
-import { CoerceType, ElementType, ValidationType } from './types';
+import { CoerceType, CoercedValue, FormElementType, ValidationType } from './types';
 import { config, registeredTypes } from './config';
 import type { RefObject } from 'react';
 
-export const regexMatches = (val: string, regex: string | RegExp) =>
-  (regex instanceof RegExp ? regex : new RegExp(regex)).test(val);
+export const regexMatches = (val: unknown, regex: string | RegExp) =>
+  (regex instanceof RegExp ? regex : new RegExp(regex)).test(String(val));
 
-interface IFormFieldOptions {
+interface IFormFieldOptions<
+  TRawValue = unknown,
+  TElement = HTMLElement,
+  TRef = TElement,
+  TCoerce extends CoerceType | undefined = CoerceType | undefined
+> {
   id: string;
   name: string;
-  componentRef: RefObject<any>;
-  getValue: (ref: RefObject<any>) => any;
+  componentRef: RefObject<TRef>;
+  rawGetValue: (ref: RefObject<TRef>) => TRawValue;
   type: keyof typeof registeredTypes;
   validation?: ValidationType;
-  setSuccess?: Function;
-  setErrors?: Function;
+  setSuccess?: (success: boolean) => void;
+  setErrors?: (errors: (FieldError | string)[]) => void;
   setIsChecked: (checked: boolean) => void;
   disableOnInvalidForm?: boolean;
-  coerceType?: CoerceType;
+  coerceType?: TCoerce;
 }
 
-export class FormField implements IFormFieldOptions {
+export class FormField<
+  TRawValue = unknown,
+  TElement = HTMLElement,
+  TRef = TElement,
+  TCoerce extends CoerceType | undefined = CoerceType | undefined,
+  TValue = CoercedValue<TRawValue, TCoerce>
+> {
   public id: string;
   public name: string;
   public type: keyof typeof registeredTypes;
   validation?: ValidationType;
-  componentRef: RefObject<any>;
-  _setSuccess?: Function;
-  _setErrors?: Function;
-  _getValue: Function;
+  componentRef: RefObject<TRef>;
+  _setSuccess?: (success: boolean) => void;
+  _setErrors?: (errors: (FieldError | string)[]) => void;
+  _getRawValue: (ref: RefObject<TRef>) => TRawValue;
   _setIsChecked: (checked: boolean) => void;
   disableOnInvalidForm?: boolean;
-  coerceType?: CoerceType;
+  coerceType?: TCoerce;
 
-  constructor(payload: IFormFieldOptions) {
+  constructor(payload: IFormFieldOptions<TRawValue, TElement, TRef, TCoerce>) {
     this.id = payload.id;
     this.type = payload.type;
     this.name = payload.name;
@@ -41,26 +52,40 @@ export class FormField implements IFormFieldOptions {
     this.validation = payload.validation;
     this._setSuccess = payload.setSuccess;
     this._setErrors = payload.setErrors;
-    this._getValue = payload.getValue;
+    this._getRawValue = payload.rawGetValue;
     this._setIsChecked = payload.setIsChecked;
     this.disableOnInvalidForm = payload.disableOnInvalidForm;
     this.coerceType = payload.coerceType;
   }
 
-  getErrors() {
+  getErrors(): (FieldError | string)[] {
     const value = this.getValue();
-    return FormField.getErrors(this.validation, value);
+    const errs = FormField.getErrors(this.validation, value as unknown as TRawValue);
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      this.validation?.required &&
+      this.coerceType === 'array' &&
+      Array.isArray(value) &&
+      value.length === 0
+    ) {
+      console.warn(
+        `[react-modular-forms] Required field "${this.name}" coerced as array is empty; ensure UI enforces at least one selection.`
+      );
+    }
+    return errs;
   }
 
-  getValue() {
-    let v = this._getValue(this.componentRef);
+  getValue(): TValue {
+    let v = this._getRawValue(this.componentRef) as unknown as TRawValue;
     if (
       this.type === ModularFieldType.Checkbox &&
       config.handleSingleCheckboxAsArray &&
       !Array.isArray(v)
-    )
-      v = [v];
-    return this.coerceType ? this.coerce(v) : v;
+    ) {
+      v = [v] as unknown as TRawValue;
+    }
+    const coerced = this.coerceType ? (this.coerce(v as unknown) as unknown) : (v as unknown);
+    return coerced as TValue;
   }
 
   setSuccess() {
@@ -78,10 +103,11 @@ export class FormField implements IFormFieldOptions {
   }
 
   isChecked() {
-    return (document.getElementById(this.id) as HTMLInputElement).checked;
+    const el = this.componentRef?.current as unknown as HTMLInputElement | null;
+    return !!el?.checked;
   }
 
-  static getErrors(validation?: ValidationType, value?: any) {
+  static getErrors(validation?: ValidationType, value?: unknown) {
     let errors: (string | FieldError)[] = [];
     if (!validation) return errors;
 
@@ -91,7 +117,7 @@ export class FormField implements IFormFieldOptions {
     }
 
     if (validation.validator) {
-      let validatorError = validation.validator(value);
+      const validatorError = validation.validator(value);
       if (validatorError) {
         errors.push(validatorError);
         if (config.greedyValidation) return errors;
@@ -108,14 +134,27 @@ export class FormField implements IFormFieldOptions {
     return errors;
   }
 
-  static isEmpty(value: any) {
-    return !value;
+  static isEmpty(value: unknown) {
+    if (value === null || value === undefined) return true;
+    if (typeof value === 'string') return value.trim().length === 0;
+    if (Array.isArray(value)) return value.length === 0;
+    // Objects: treat empty plain object as empty for required if no enumerable keys
+    if (typeof value === 'object') {
+      try {
+        if (Object.getPrototypeOf(value) === Object.prototype) {
+          return Object.keys(value as Record<string, unknown>).length === 0;
+        }
+      } catch {
+        return false;
+      }
+    }
+    return false;
   }
 
-  static getRegExpsError(regExps: { [error: string]: RegExp }, positive: boolean, value: any) {
-    let errors: (string | FieldError)[] = [];
+  static getRegExpsError(regExps: { [error: string]: RegExp }, positive: boolean, value: unknown) {
+    const errors: (string | FieldError)[] = [];
     if (!regExps) return errors;
-    for (let error of Object.keys(regExps)) {
+    for (const error of Object.keys(regExps)) {
       if (positive ? regexMatches(value, regExps[error]) : !regexMatches(value, regExps[error]))
         errors.push(error);
     }
@@ -123,23 +162,43 @@ export class FormField implements IFormFieldOptions {
   }
 
   setDisabled(disabled: boolean) {
-    (document.getElementById(this.id) as ElementType).disabled = disabled;
+    const el = this.componentRef?.current as unknown as
+      | Partial<FormElementType>
+      | Record<string, any>
+      | null;
+    if (el && typeof el === 'object' && 'disabled' in el) {
+      try {
+        (el as FormElementType).disabled = disabled as boolean;
+      } catch {
+        // ignore if not assignable
+      }
+    }
   }
 
-  coerce(value: any) {
+  coerce(value: unknown) {
     switch (this.coerceType) {
       case 'array':
         return Array.isArray(value)
           ? value
-          : typeof value === 'undefined' || value === null || value === ''
+          : value === undefined || value === null || value === ''
           ? []
           : [value];
-      case 'int':
-        return parseInt(value);
-      case 'float':
-        return parseFloat(value);
+      case 'int': {
+        if (value === null || typeof value === 'undefined') return value;
+        if (value === '') return undefined;
+        const n = parseInt(String(value), 10);
+        return Number.isNaN(n) ? undefined : n;
+      }
+      case 'float': {
+        if (value === null || typeof value === 'undefined') return value;
+        if (value === '') return undefined;
+        const f = parseFloat(String(value));
+        return Number.isNaN(f) ? undefined : f;
+      }
       case 'string':
-        return value?.toString() || value;
+        return (value as { toString?: () => string })?.toString?.() ?? value;
+      default:
+        return value;
     }
   }
 }
