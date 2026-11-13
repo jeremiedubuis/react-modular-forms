@@ -1,32 +1,37 @@
 import React from 'react';
 import { FieldComponentProps } from '../types';
 
-export const Textarea: React.FC<React.HTMLProps<HTMLTextAreaElement> & FieldComponentProps> = ({
-  type,
+export const Textarea: React.FC<
+  FieldComponentProps<unknown, 'textarea', HTMLTextAreaElement> &
+    Omit<
+      React.HTMLProps<HTMLTextAreaElement>,
+      'value' | 'checked' | 'onChange' | 'onBlur' | 'onFocus' | 'defaultValue' | 'defaultChecked'
+    >
+> = ({
   disabled,
   value,
   onBlur,
   onFocus,
   onChange,
   errors,
-  setComponentRef,
+  setComponentRef: _setComponentRef,
   validation,
   componentRef,
   children,
-  formId,
-  errorHtmlElement,
-  setValue,
+  formId: _formId,
+  errorHtmlElement: _errorHtmlElement,
+  setValue: _setValue,
   ...intrinsic
 }) => {
   const sharedProps = {
-    ref: componentRef,
+    ref: componentRef as React.Ref<HTMLTextAreaElement>,
     onChange,
     onFocus,
     onBlur,
-    'aria-invalid': !!errors,
+    'aria-invalid': errors.length > 0,
     'aria-required': validation?.required,
     disabled,
-    value,
+    value: (value ?? '') as any,
     ...intrinsic
   };
 

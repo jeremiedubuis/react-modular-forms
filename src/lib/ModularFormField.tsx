@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { FormStore } from './FormStore';
 import { config, registeredTypes } from './config';
@@ -9,7 +9,25 @@ import { arrayToAccessor } from './accessorsHelpers';
 const cn = (...classes: (string | false | null | undefined)[]) =>
   classes.filter((c) => c).join(' ');
 
-export const ModularFormField: React.FC<ModularFormFieldProps> = ({
+/**
+ * Determines if a field type should default to empty string to maintain controlled component behavior.
+ * Returns true for text-based inputs, selects, and textareas.
+ */
+const shouldUseStringDefault = (type: string): boolean => {
+  const typeInfo = registeredTypes[type];
+  if (!typeInfo) return false;
+
+  // Checkable fields (checkbox, radio) don't need string defaults
+  if (typeInfo.checkable) return false;
+
+  // File inputs and hidden inputs have special handling
+  if (type === ModularFieldType.File || type === ModularFieldType.Hidden) return false;
+
+  // All other input types (text, number, email, etc.), select, and textarea should use string defaults
+  return true;
+};
+
+export function ModularFormField({
   children,
   innerClassName,
   className,
@@ -18,18 +36,18 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   formId,
   id: _id,
   label,
+  labelClassName,
   name: _name,
   onChange,
   onFocus,
   onBlur,
-  onSubmit,
   type,
   wrapperProps = {},
-  validation,
+  validation: validationProp,
   disabled,
   readOnly,
   errorMessages,
-  value: _value = '',
+  value: _value,
   coerceType,
   componentRef: _componentRef,
   checked,
@@ -37,27 +55,88 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
   hideErrors,
   onErrorChange,
   ...intrinsic
-}) => {
+}: ModularFormFieldProps): React.ReactElement {
+  const hasValidation = validationProp !== undefined;
+  const {
+    required,
+    negativeRegExps,
+    positiveRegExps,
+    validator,
+    validateOnBlur,
+    validateOnInput,
+    group,
+    groupMin
+  } = validationProp ?? {};
+  // Inline metadata and inherited hook defaults may recreate the outer object.
+  // Functions and regex maps retain identity checks so changed rules still apply.
+  const validation = useMemo(
+    () =>
+      hasValidation
+        ? {
+            required,
+            negativeRegExps,
+            positiveRegExps,
+            validator,
+            validateOnBlur,
+            validateOnInput,
+            group,
+            groupMin
+          }
+        : undefined,
+    [
+      hasValidation,
+      required,
+      negativeRegExps,
+      positiveRegExps,
+      validator,
+      validateOnBlur,
+      validateOnInput,
+      group,
+      groupMin
+    ]
+  );
   const [isFocused, setIsFocused] = useState(false);
   const [isChecked, setIsChecked] = useState(!!checked);
   const [errors, setErrors] = useState<(FieldError | string)[]>([]);
   const [success, setSuccess] = useState(false);
-  const [value, setValue] = useState(_value);
-  const componentRef = _componentRef || useRef();
-  const setComponentRef = useCallback((node) => {
-    if (node) componentRef.current = node;
-  }, []);
+
+  // Ensure value is never undefined/null for string-based fields to prevent uncontrolled warnings
+  const useStringDefault = shouldUseStringDefault(type);
+  const isMultipleSelect = type === ModularFieldType.Select && !!intrinsic.multiple;
+  const safeValue = isMultipleSelect
+    ? _value ?? []
+    : useStringDefault
+    ? _value ?? config.sendEmptyStringsAs ?? ''
+    : _value;
+  const [value, setValue] = useState(safeValue);
+
+  const internalRef = useRef<HTMLElement | null>(null);
+  const componentRef = _componentRef || internalRef;
+  const setComponentRef = useCallback(
+    (node: HTMLElement | null) => {
+      (componentRef as React.MutableRefObject<HTMLElement | null>).current = node;
+    },
+    [componentRef]
+  );
 
   useEffect(() => {
-    setValue(_value);
-  }, [_value]);
+    const useStringDefault = shouldUseStringDefault(type);
+    setValue(
+      isMultipleSelect
+        ? _value ?? []
+        : useStringDefault
+        ? _value ?? config.sendEmptyStringsAs ?? ''
+        : _value
+    );
+  }, [_value, type, isMultipleSelect]);
 
   useEffect(() => {
     setIsChecked(!!checked);
   }, [checked]);
 
   const computedName = Array.isArray(_name) ? arrayToAccessor(_name) : _name;
-  const id = _id || formId + computedName;
+  const id: string | undefined =
+    _id || (formId && computedName ? formId + computedName : undefined);
 
   const name = computedName
     ? computedName
@@ -65,35 +144,69 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     ? computedName || _id
     : computedName;
 
+  const typeInfo = registeredTypes[type];
+  const isStatic = typeInfo?.isStatic;
+  const getValue = typeInfo?.getValue;
+  const wasDisabledByForm = useRef(false);
+
   useEffect(() => {
-    if (!formId || registeredTypes[type]?.isStatic) return;
-    if (name) {
-      const form = FormStore.getForm(formId);
+    if (!formId || isStatic || !getValue) return;
+    if (name && id) {
+      const form = FormStore.getForm(formId as string);
       form.registerField(
         id,
         type,
-        name,
+        name as string,
         componentRef,
-        registeredTypes[type].getValue,
-        validation,
+        getValue,
+        undefined,
         setSuccess,
         setErrors,
-        setIsChecked,
-        disableOnInvalidForm,
-        coerceType
+        setIsChecked
       );
 
       return () => form.unregisterField(id);
     }
-  }, [name]);
+  }, [formId, id, name, type, componentRef, isStatic, getValue]);
 
-  let sharedProps: any = {
-    children,
-    className: innerClassName,
+  useEffect(() => {
+    if (!formId || !id || isStatic) return;
+    const field = FormStore.getForm(formId).updateField(
+      id,
+      { validation, coerceType, disableOnInvalidForm },
+      true
+    );
+    // Restore the explicit prop only when relinquishing the form's disabled override.
+    if (wasDisabledByForm.current && !disableOnInvalidForm) field?.setDisabled(!!disabled);
+    wasDisabledByForm.current = !!disableOnInvalidForm;
+    // Registration dependencies also reapply metadata to a newly registered field.
+  }, [
+    formId,
     id,
     name,
-    'aria-invalid': !!errors,
-    'aria-required': validation?.required,
+    type,
+    componentRef,
+    isStatic,
+    getValue,
+    validation,
+    coerceType,
+    disableOnInvalidForm,
+    disabled
+  ]);
+
+  const sharedProps: Record<string, unknown> = {
+    children,
+    className: cn(
+      typeof config.innerClassName === 'function'
+        ? config.innerClassName(type)
+        : config.innerClassName,
+      innerClassName
+    ),
+    id,
+    name,
+    // mark invalid only when there are actual error entries (array presence alone is truthy)
+    'aria-invalid': Boolean(errorProp || errors.length > 0),
+    'aria-required': Boolean((validation as { required?: boolean } | undefined)?.required),
     disabled,
     readOnly,
     type,
@@ -105,42 +218,62 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     checked: isChecked,
     formId,
     errorHtmlElement,
-    onFocus: (e: any) => {
+    onFocus: (e: React.SyntheticEvent<any>) => {
       setIsFocused(true);
-      onFocus?.(e);
+      // Delegate with narrowed type when possible via overloads
+      (onFocus as ((e: any) => void) | undefined)?.(e);
     },
-    onBlur: (e: any) => {
+    onBlur: (e: React.SyntheticEvent<any>) => {
       setIsFocused(false);
       const validateOnBlur =
-        typeof validation?.validateOnBlur !== 'undefined'
-          ? validation.validateOnBlur
+        typeof (validation as { validateOnBlur?: boolean } | undefined)?.validateOnBlur !==
+        'undefined'
+          ? (validation as { validateOnBlur?: boolean })!.validateOnBlur!
           : config.validateOnBlur;
-      if (formId && validateOnBlur) FormStore.getForm(formId).validateField(id);
-      onBlur?.(e);
+      if (formId && validateOnBlur && id) FormStore.getForm(formId).validateField(id);
+      (onBlur as ((e: any) => void) | undefined)?.(e);
     },
+
+    'data-rmf-props-value': type === 'checkbox' ? _value : undefined,
     ...intrinsic
   };
 
   if (!registeredTypes[type]?.isStatic) {
-    sharedProps.onChange = (e: any, ...args: any[]) => {
+    sharedProps.onChange = (e: React.ChangeEvent<any>) => {
       if (registeredTypes[type].checkable) {
         if (type === ModularFieldType.Radio) {
-          FormStore.getForm(formId).checkRadioField(id);
+          if (formId && id) FormStore.getForm(formId).checkRadioField(id);
         } else {
           setIsChecked((e.currentTarget as HTMLInputElement).checked);
         }
-      } else setValue(registeredTypes[type].getValue(componentRef));
-      onChange?.(e, ...args);
+      }
+
+      const getter = registeredTypes[type].getValue;
+      if (getter) {
+        const nextVal = getter(componentRef as React.RefObject<any>);
+        if (!registeredTypes[type].checkable) setValue(nextVal as any);
+        // Forward event with specific element type based on field kind
+        (onChange as ((e: any, value: any) => void) | undefined)?.(e, nextVal as any);
+      } else {
+        // Static components or custom without getValue
+        (onChange as ((e: any, value: never) => void) | undefined)?.(
+          e as React.ChangeEvent<any>,
+          undefined as never
+        );
+      }
+
+      const validateOnInput = validation?.validateOnInput ?? config.validateOnInput;
+      if (formId && validateOnInput && id) FormStore.getForm(formId).validateField(id);
     };
   } else {
-    sharedProps.onChange = onChange;
+    sharedProps.onChange = onChange as any;
   }
 
   const Component = registeredTypes[type].Component;
   const extraClass = registeredTypes[type].extraClass;
 
   useEffect(() => {
-    onErrorChange?.(errors);
+    (onErrorChange as ((e: (FieldError | string)[]) => void) | undefined)?.(errors);
   }, [errors]);
 
   const errorContent = !hideErrors && (errorProp || errors.length > 0) && (
@@ -165,32 +298,45 @@ export const ModularFormField: React.FC<ModularFormFieldProps> = ({
     <div
       className={cn(
         config.fieldClassName,
-        className,
+        className as string | undefined,
         `is-${type}`,
-        isFocused && 'is-focused',
-        isChecked && 'is-checked',
-        (errorProp || errors.length > 0) && 'has-error',
-        validation && success && 'has-success',
-        readOnly && 'is-read-only',
-        value && 'has-value',
+        isFocused ? 'is-focused' : undefined,
+        isChecked ? 'is-checked' : undefined,
+        Boolean(errorProp) || errors.length > 0 ? 'has-error' : undefined,
+        Boolean(validation) && !!success ? 'has-success' : undefined,
+        readOnly ? 'is-read-only' : undefined,
+        value ? 'has-value' : undefined,
         extraClass
       )}
-      {...wrapperProps}
+      {...(wrapperProps as object)}
     >
-      {registeredTypes[type].labelBefore && label && <label htmlFor={id}>{label}</label>}
-      <Component {...sharedProps} />
-      {!registeredTypes[type].labelBefore && label && <label htmlFor={id}>{label}</label>}
+      {registeredTypes[type].labelBefore && label && (
+        <label htmlFor={id} className={cn(config.labelClassName, labelClassName)}>
+          {label as any}
+        </label>
+      )}
+      <Component
+        {...(sharedProps as unknown as import('./types').FieldComponentProps<unknown, any, any> &
+          Record<string, unknown>)}
+      />
+      {!registeredTypes[type].labelBefore && label && (
+        <label htmlFor={id} className={cn(config.labelClassName, labelClassName)}>
+          {label as any}
+        </label>
+      )}
 
       {errorContent
         ? errorHtmlElement
-          ? ReactDOM.createPortal(
-              errorContent,
-              typeof errorHtmlElement === 'string'
-                ? document.querySelector(errorHtmlElement)
-                : errorHtmlElement
-            )
+          ? (() => {
+              const target =
+                typeof errorHtmlElement === 'string'
+                  ? (document.querySelector(errorHtmlElement) as Element | null)
+                  : (errorHtmlElement as Element | null);
+              // If target is not found, gracefully fall back to inline rendering
+              return target ? ReactDOM.createPortal(errorContent, target) : errorContent;
+            })()
           : errorContent
         : null}
     </div>
   );
-};
+}
